@@ -1,8 +1,9 @@
 import { CharStreams, CommonTokenStream } from "antlr4";
 import CypherCmdLexer from "../generated-parser/CypherCmdLexer";
 import CypherLexer from "../generated-parser/CypherCmdLexer";
-import CypherCmdParser, { ClauseContext, EndOfFileContext, MatchClauseContext, MergeActionContext, ReturnClauseContext } from "../generated-parser/CypherCmdParser";
+import CypherCmdParser, { ClauseContext, EndOfFileContext, MatchClauseContext, MergeActionContext, NodePatternContext, ReturnClauseContext, VariableContext } from "../generated-parser/CypherCmdParser";
 import CypherCmdParserVisitor from "../generated-parser/CypherCmdParserVisitor";
+import { lexerKeywords } from "../lexerSymbols";
 
 export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
   buffer: string[] = [];
@@ -16,13 +17,23 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
   }
 
   visitTerminal = (node: any): string => {
-    if (this.buffer.length > 0 && this.buffer[this.buffer.length - 1] !== '\n') {
-      this.buffer.push(' ');
+    if (this.buffer.length > 0 && this.buffer[this.buffer.length - 1] !== '\n'
+      && this.buffer[this.buffer.length - 1] !== ' ') {
+      if (lexerKeywords.includes(node.symbol.type)) {
+        this.buffer.push(' ');
+      }
     }
     if (node.getSymbol().type === CypherCmdLexer.EOF) {
       return node.getText();
     }
-    this.buffer.push(node.getText());
+    if (lexerKeywords.includes(node.symbol.type)) {
+      this.buffer.push(node.getText().toUpperCase());
+    } else {
+      this.buffer.push(node.getText());
+    }
+    if (lexerKeywords.includes(node.symbol.type)) {
+      this.buffer.push(' ');
+    }
     return node.getText();
   }
 
@@ -38,7 +49,7 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
 
 
 const query = `MERGE (n) ON CREATE SET n.prop = 0
-MERGE (a:A)-[:T]->(b:B)
+merge (a:A)-[:T]->(b:B)
 ON MATCH SET b.name = 'you'
 ON CREATE SET a.name = 'me'
 RETURN a.prop`;
