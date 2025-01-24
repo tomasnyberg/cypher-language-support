@@ -1,7 +1,7 @@
 import { CharStreams, CommonTokenStream, TerminalNode } from "antlr4";
 import CypherCmdLexer from "../generated-parser/CypherCmdLexer";
 import CypherLexer from "../generated-parser/CypherCmdLexer";
-import CypherCmdParser, { ArrowLineContext, ClauseContext, ExistsExpressionContext, LabelExpressionContext, LeftArrowContext, MapContext, MergeActionContext, MergeClauseContext, PropertyContext, ReturnItemsContext, RightArrowContext, UnescapedSymbolicNameStringContext, WhereClauseContext } from "../generated-parser/CypherCmdParser";
+import CypherCmdParser, { ArrowLineContext, ClauseContext, ExistsExpressionContext, LabelExpressionContext, LeftArrowContext, MapContext, MergeActionContext, MergeClauseContext, OrderByContext, PropertyContext, ReturnItemsContext, RightArrowContext, UnescapedSymbolicNameStringContext, WhereClauseContext } from "../generated-parser/CypherCmdParser";
 import CypherCmdParserVisitor from "../generated-parser/CypherCmdParserVisitor";
 import { lexerKeywords, lexerOperators } from "../lexerSymbols";
 
@@ -87,6 +87,19 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
     ctx.returnItem_list().forEach((item, idx) => {
       this.visit(item);
       if (idx < ctx.returnItem_list().length - 1) {
+        this.buffer.push(',');
+        this.buffer.push(' ');
+      }
+    });
+    return ctx.getText();
+  }
+
+  visitOrderBy = (ctx: OrderByContext): string => {
+    this.visit(ctx.ORDER())
+    this.visit(ctx.BY())
+    ctx.orderItem_list().forEach((item, idx) => {
+      this.visit(item);
+      if (idx < ctx.orderItem_list().length - 1) {
         this.buffer.push(',');
         this.buffer.push(' ');
       }
@@ -193,7 +206,7 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
 //const query5 = `MATCH (n)--(m)--(k)--(l) RETURN n, m, k, l`;
 //const query6 = `MATCH p=(s)-->(e) WHERE s.name<>e.name RETURN length(p)`;
 //const query7 = `MATCH (a:A) WHERE EXISTS {(a)-->(b:B)} RETURN a.prop`;
-const query8 = `WITH { key1 :'value' ,key2  :  42 } AS map RETURN map`
+const query8 = `RETURN user.id ORDER BY potential_reach DESC, like_count;`
 
 export function formatQuery(query: string) {
   const inputStream = CharStreams.fromString(query);
