@@ -106,7 +106,8 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
   visitMergeAction = (ctx: MergeActionContext): string => {
     if (this.buffer.length > 0) {
       this.buffer.push('\n')
-      this.buffer.push('  ')
+      this.buffer.push(' ')
+      this.buffer.push(' ')
     }
     this.visitChildren(ctx);
     return ctx.getText();
@@ -121,7 +122,7 @@ const query4 = `MATCH (n) WHERE n.name CONTAINS 's' RETURN n.name`;
 const query5 = `MATCH (n)--(m)--(k)--(l) RETURN n, m, k, l`;
 const query6 = `MATCH p=(s)-->(e) WHERE s.name<>e.name RETURN length(p)`;
 
-function formatQuery(query: string) {
+export function formatQuery(query: string) {
   const inputStream = CharStreams.fromString(query);
   const lexer = new CypherLexer(inputStream);
   const tokens = new CommonTokenStream(lexer);
@@ -132,6 +133,7 @@ function formatQuery(query: string) {
   visitor.visit(tree);
   console.log(visitor.buffer.join(''))
   console.log();
+  return visitor.buffer.join('');
 }
 
 formatQuery(query1)
