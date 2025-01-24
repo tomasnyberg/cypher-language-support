@@ -1,7 +1,7 @@
 import { CharStreams, CommonTokenStream } from "antlr4";
 import CypherCmdLexer from "../generated-parser/CypherCmdLexer";
 import CypherLexer from "../generated-parser/CypherCmdLexer";
-import CypherCmdParser, { ClauseContext, EndOfFileContext, MatchClauseContext, MergeActionContext, NodePatternContext, PropertyContext, ReturnClauseContext, VariableContext, WhereClauseContext } from "../generated-parser/CypherCmdParser";
+import CypherCmdParser, { ClauseContext, EndOfFileContext, MatchClauseContext, MergeActionContext, NodePatternContext, PropertyContext, ReturnClauseContext, ReturnItemsContext, VariableContext, WhereClauseContext } from "../generated-parser/CypherCmdParser";
 import CypherCmdParserVisitor from "../generated-parser/CypherCmdParserVisitor";
 import { lexerKeywords } from "../lexerSymbols";
 
@@ -37,6 +37,16 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
     return node.getText();
   }
 
+  visitReturnItems = (ctx: ReturnItemsContext): string => {
+    ctx.returnItem_list().forEach((item, idx) => {
+      this.visit(item);
+      if (idx < ctx.returnItem_list().length - 1) {
+        this.buffer.push(', ');
+      }
+    });
+    return ctx.getText();
+  }
+
   visitProperty = (ctx: PropertyContext): string => {
     this.buffer.push('.');
     this.buffer.push(ctx.propertyKeyName().getText());
@@ -65,6 +75,7 @@ const query1 = `MERGE (n) ON CREATE SET n.prop = 0 merge (a:A)-[:T]->(b:B) ON MA
 const query2 = `CREATE (n:Label {prop: 0}) WITH n, rand() AS rand RETURN rand, map.propertyKey, count(n)`
 const query3 = `MATCH (a:A) WHERE EXISTS {MATCH (a)-->(b:B) WHERE b.prop = 'yellow'} RETURN a.foo`;
 const query4 = `MATCH (n) WHERE n.name CONTAINS 's' RETURN n.name`;
+const query5 = `MATCH (n)--(m)--(k)--(l) RETURN n, m, k, l`;
 
 function formatQuery(query: string) {
   const inputStream = CharStreams.fromString(query);
@@ -83,3 +94,4 @@ formatQuery(query1)
 formatQuery(query2)
 formatQuery(query3)
 formatQuery(query4)
+formatQuery(query5)
