@@ -1,24 +1,34 @@
 import { CharStreams, CommonTokenStream } from "antlr4";
+import CypherCmdLexer from "../generated-parser/CypherCmdLexer";
 import CypherLexer from "../generated-parser/CypherCmdLexer";
-import CypherCmdParser, { ClauseContext, MatchClauseContext, ReturnClauseContext } from "../generated-parser/CypherCmdParser";
+import CypherCmdParser, { ClauseContext, EndOfFileContext, MatchClauseContext, ReturnClauseContext } from "../generated-parser/CypherCmdParser";
 import CypherCmdParserVisitor from "../generated-parser/CypherCmdParserVisitor";
 
 export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
-  output = "";
+  buffer: string[] = [];
 
-  visitMatchClause = (ctx: MatchClauseContext): string => {
-    this.output += ctx.MATCH() + ' ' + ctx.patternList().getText();
+  visitClause = (ctx: ClauseContext): string => {
+    if (this.buffer.length > 0) {
+      this.buffer.push('\n')
+    }
+    this.visitChildren(ctx);
     return ctx.getText();
   }
 
-  visitReturnClause = (ctx: ReturnClauseContext): string => {
-    this.output += '\n' + ctx.RETURN().getText() + ' ' + ctx.returnBody().getText();
-    return ctx.getText();
+  visitTerminal = (node: any): string => {
+    if (this.buffer.length > 0 && this.buffer[this.buffer.length - 1] !== '\n') {
+      this.buffer.push(' ');
+    }
+    if (node.getSymbol().type === CypherCmdLexer.EOF) {
+      return node.getText();
+    }
+    this.buffer.push(node.getText());
+    return node.getText();
   }
 }
 
 
-const query = "MATCH (n) RETURN n"
+const query = "MATCH (n) WHERE n.name CONTAINS 's' RETURN n.name"
 
 const inputStream = CharStreams.fromString(query);
 const lexer = new CypherLexer(inputStream);
@@ -27,6 +37,5 @@ const parser = new CypherCmdParser(tokens);
 parser.buildParseTrees = true
 const tree = parser.statementsOrCommands()
 const visitor = new TreePrintVisitor();
-const result = visitor.visit(tree);
-console.log(visitor.output);
-//console.log(result[0][0][0][0][0])
+visitor.visit(tree);
+console.log(visitor.buffer.join(''))
