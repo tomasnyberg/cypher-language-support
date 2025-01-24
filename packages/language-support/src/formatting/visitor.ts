@@ -1,7 +1,7 @@
 import { CharStreams, CommonTokenStream } from "antlr4";
 import CypherCmdLexer from "../generated-parser/CypherCmdLexer";
 import CypherLexer from "../generated-parser/CypherCmdLexer";
-import CypherCmdParser, { ClauseContext, EndOfFileContext, MatchClauseContext, MergeActionContext, NodePatternContext, ReturnClauseContext, VariableContext } from "../generated-parser/CypherCmdParser";
+import CypherCmdParser, { ClauseContext, EndOfFileContext, MatchClauseContext, MergeActionContext, NodePatternContext, PropertyContext, ReturnClauseContext, VariableContext } from "../generated-parser/CypherCmdParser";
 import CypherCmdParserVisitor from "../generated-parser/CypherCmdParserVisitor";
 import { lexerKeywords } from "../lexerSymbols";
 
@@ -35,6 +35,12 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
       this.buffer.push(' ');
     }
     return node.getText();
+  }
+
+  visitProperty = (ctx: PropertyContext): string => {
+    this.buffer.push('.');
+    this.buffer.push(ctx.propertyKeyName().getText());
+    return ctx.getText();
   }
 
   visitMergeAction = (ctx: MergeActionContext): string => {
