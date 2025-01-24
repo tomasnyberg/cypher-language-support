@@ -170,14 +170,13 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
   visitMap = (ctx: MapContext): string => {
     this.buffer.push("{")
 
-    console.log("before for loop", ctx.expression_list()[0].start.text)
-    for (let i = 0; i < ctx.propertyKeyName_list.length; i++) {
-    console.log("inside")
-
-      this.buffer.push(ctx.propertyKeyName(i).getText())
+    const propertyKeyNames = ctx.propertyKeyName_list();
+    const expressions = ctx.expression_list();
+    for (let i = 0; i < expressions.length; i++) {
+      this.buffer.push(propertyKeyNames[i].getText())
       this.buffer.push(": ")
-      this.buffer.push(ctx.expression(i).getText())
-      if (i < ctx.propertyKeyName_list.length - 1) {
+      this.buffer.push(expressions[i].getText());
+      if (i != expressions.length - 1) {
         this.buffer.push(", ")
       }
     }
@@ -187,13 +186,13 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
 }
 
 
-const query1 = `MERGE (n) ON CREATE SET n.prop = 0 merge (a:A)-[:T]->(b:B) ON MATCH SET b.name = 'you' ON CREATE SET a.name = 'me' RETURN a.prop`;
-const query2 = `CREATE (n:Label {prop: 0}) WITH n, rand() AS rand RETURN rand, map.propertyKey, count(n)`
-const query3 = `MATCH (a:A) WHERE EXISTS {MATCH (a)-->(b:B) WHERE b.prop = 'yellow'} RETURN a.foo`;
-const query4 = `MATCH (n) WHERE n.name CONTAINS 's' RETURN n.name`;
-const query5 = `MATCH (n)--(m)--(k)--(l) RETURN n, m, k, l`;
-const query6 = `MATCH p=(s)-->(e) WHERE s.name<>e.name RETURN length(p)`;
-const query7 = `MATCH (a:A) WHERE EXISTS {(a)-->(b:B)} RETURN a.prop`;
+//const query1 = `MERGE (n) ON CREATE SET n.prop = 0 merge (a:A)-[:T]->(b:B) ON MATCH SET b.name = 'you' ON CREATE SET a.name = 'me' RETURN a.prop`;
+//const query2 = `CREATE (n:Label {prop: 0}) WITH n, rand() AS rand RETURN rand, map.propertyKey, count(n)`
+//const query3 = `MATCH (a:A) WHERE EXISTS {MATCH (a)-->(b:B) WHERE b.prop = 'yellow'} RETURN a.foo`;
+//const query4 = `MATCH (n) WHERE n.name CONTAINS 's' RETURN n.name`;
+//const query5 = `MATCH (n)--(m)--(k)--(l) RETURN n, m, k, l`;
+//const query6 = `MATCH p=(s)-->(e) WHERE s.name<>e.name RETURN length(p)`;
+//const query7 = `MATCH (a:A) WHERE EXISTS {(a)-->(b:B)} RETURN a.prop`;
 const query8 = `WITH { key1 :'value' ,key2  :  42 } AS map RETURN map`
 
 export function formatQuery(query: string) {
@@ -210,12 +209,12 @@ export function formatQuery(query: string) {
   return visitor.buffer.join('');
 }
 
-formatQuery(query1)
-formatQuery(query2)
-formatQuery(query3)
-formatQuery(query4)
-formatQuery(query5)
-formatQuery(query6)
-formatQuery(query7)
+//formatQuery(query1)
+//formatQuery(query2)
+//formatQuery(query3)
+//formatQuery(query4)
+//formatQuery(query5)
+//formatQuery(query6)
+//formatQuery(query7)
 formatQuery(query8)
 

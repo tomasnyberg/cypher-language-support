@@ -52,6 +52,13 @@ RETURN length(p)`;
     expect(formatQuery(query)).toEqual(expected);
   });
 
+  test('formats maps properly', () => {
+    const query = `WITH { key1 :'value' ,key2  :  42 } AS map RETURN map`;
+    const expected = `WITH {key1: 'value', key2: 42} AS map
+RETURN map`;
+    expect(formatQuery(query)).toEqual(expected);
+  });
+
   //  test('variable names example', () => {
   //    const query = `CREATE (n:Label {prop: 0})
   //WITH n, rand() AS rand, $param AS map
