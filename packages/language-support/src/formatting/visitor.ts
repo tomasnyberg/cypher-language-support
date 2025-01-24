@@ -1,7 +1,7 @@
 import { CharStreams, CommonTokenStream, TerminalNode } from "antlr4";
 import CypherCmdLexer from "../generated-parser/CypherCmdLexer";
 import CypherLexer from "../generated-parser/CypherCmdLexer";
-import CypherCmdParser, { ArrowLineContext, ClauseContext, ExistsExpressionContext, LabelExpressionContext, LeftArrowContext, MergeActionContext, MergeClauseContext, PropertyContext, ReturnItemsContext, RightArrowContext, UnescapedSymbolicNameStringContext, WhereClauseContext } from "../generated-parser/CypherCmdParser";
+import CypherCmdParser, { ArrowLineContext, ClauseContext, ExistsExpressionContext, LabelExpressionContext, LeftArrowContext, MapContext, MergeActionContext, MergeClauseContext, PropertyContext, ReturnItemsContext, RightArrowContext, UnescapedSymbolicNameStringContext, WhereClauseContext } from "../generated-parser/CypherCmdParser";
 import CypherCmdParserVisitor from "../generated-parser/CypherCmdParserVisitor";
 import { lexerKeywords, lexerOperators } from "../lexerSymbols";
 
@@ -166,6 +166,24 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
     this.visitChildren(ctx);
     return ctx.getText();
   }
+
+  visitMap = (ctx: MapContext): string => {
+    this.buffer.push("{")
+
+    console.log("before for loop", ctx.expression_list()[0].start.text)
+    for (let i = 0; i < ctx.propertyKeyName_list.length; i++) {
+    console.log("inside")
+
+      this.buffer.push(ctx.propertyKeyName(i).getText())
+      this.buffer.push(": ")
+      this.buffer.push(ctx.expression(i).getText())
+      if (i < ctx.propertyKeyName_list.length - 1) {
+        this.buffer.push(", ")
+      }
+    }
+    this.buffer.push("}")
+    return ""
+  }
 }
 
 
@@ -176,6 +194,7 @@ const query4 = `MATCH (n) WHERE n.name CONTAINS 's' RETURN n.name`;
 const query5 = `MATCH (n)--(m)--(k)--(l) RETURN n, m, k, l`;
 const query6 = `MATCH p=(s)-->(e) WHERE s.name<>e.name RETURN length(p)`;
 const query7 = `MATCH (a:A) WHERE EXISTS {(a)-->(b:B)} RETURN a.prop`;
+const query8 = `WITH { key1 :'value' ,key2  :  42 } AS map RETURN map`
 
 export function formatQuery(query: string) {
   const inputStream = CharStreams.fromString(query);
@@ -198,4 +217,5 @@ formatQuery(query4)
 formatQuery(query5)
 formatQuery(query6)
 formatQuery(query7)
+formatQuery(query8)
 
