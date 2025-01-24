@@ -4,20 +4,15 @@ import CypherCmdParser, { ClauseContext, MatchClauseContext, ReturnClauseContext
 import CypherCmdParserVisitor from "../generated-parser/CypherCmdParserVisitor";
 
 export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
+  output = "";
 
   visitMatchClause = (ctx: MatchClauseContext): string => {
-    console.log("match clause called");
-    console.log(ctx.getText());
-    //ctx.patternList().forEach((pattern) => {
-    //  console.log(pattern.getText());
-    //})
-
+    this.output += ctx.MATCH() + ' ' + ctx.patternList().getText();
     return ctx.getText();
   }
 
   visitReturnClause = (ctx: ReturnClauseContext): string => {
-    console.log("return clause called");
-    console.log(ctx.getText());
+    this.output += '\n' + ctx.RETURN().getText() + ' ' + ctx.returnBody().getText();
     return ctx.getText();
   }
 }
@@ -33,4 +28,5 @@ parser.buildParseTrees = true
 const tree = parser.statementsOrCommands()
 const visitor = new TreePrintVisitor();
 const result = visitor.visit(tree);
-console.log(result)
+console.log(visitor.output);
+//console.log(result[0][0][0][0][0])
