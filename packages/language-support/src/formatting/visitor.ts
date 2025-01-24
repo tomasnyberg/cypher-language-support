@@ -44,6 +44,12 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
     return ctx.getText();
   }
 
+  // Handled separately because function names can be keywords
+  visitFunctionName = (ctx: any): string => {
+    this.buffer.push(ctx.getText());
+    return ctx.getText();
+  }
+
   // Handled separately because we want spaces between the commas
   visitReturnItems = (ctx: ReturnItemsContext): string => {
     ctx.returnItem_list().forEach((item, idx) => {
