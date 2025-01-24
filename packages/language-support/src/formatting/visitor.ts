@@ -1,7 +1,7 @@
 import { CharStreams, CommonTokenStream, TerminalNode } from "antlr4";
 import CypherCmdLexer from "../generated-parser/CypherCmdLexer";
 import CypherLexer from "../generated-parser/CypherCmdLexer";
-import CypherCmdParser, { ArrowLineContext, ClauseContext, LabelExpressionContext, LeftArrowContext, MergeActionContext, MergeClauseContext, PropertyContext, ReturnItemsContext, RightArrowContext, UnescapedSymbolicNameStringContext, WhereClauseContext } from "../generated-parser/CypherCmdParser";
+import CypherCmdParser, { ArrowLineContext, ClauseContext, ExistsExpressionContext, LabelExpressionContext, LeftArrowContext, MergeActionContext, MergeClauseContext, PropertyContext, ReturnItemsContext, RightArrowContext, UnescapedSymbolicNameStringContext, WhereClauseContext } from "../generated-parser/CypherCmdParser";
 import CypherCmdParserVisitor from "../generated-parser/CypherCmdParserVisitor";
 import { lexerKeywords, lexerOperators } from "../lexerSymbols";
 
@@ -12,6 +12,7 @@ function wantsSpaces(tokenType: number): boolean {
 
 export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
   buffer: string[] = [];
+  indentation = 0
 
   // Handled separately because clauses shuold have newlines
   visitClause = (ctx: ClauseContext): string => {
@@ -49,6 +50,13 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
   }
 
   visitTerminal = (node: TerminalNode): string => {
+    if (this.buffer.length > 0 && this.buffer[this.buffer.length - 1] === '\n') {
+      for (let i = 0; i < this.indentation; i++) {
+        this.buffer.push(" ")
+        this.buffer.push(" ")
+      }
+    }
+
     if (this.buffer.length > 0 && this.buffer[this.buffer.length - 1] !== '\n'
       && this.buffer[this.buffer.length - 1] !== ' ') {
       if (wantsSpaces(node.symbol.type)) {
@@ -100,6 +108,23 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
     }
     return this.visitChildren(ctx);
   }
+
+  visitExistsExpression = (ctx: ExistsExpressionContext): string => {
+    this.buffer.push("EXISTS")
+    this.buffer.push(" {")
+    if (ctx.regularQuery()) {
+      this.indentation++;
+      this.visit(ctx.regularQuery())
+      this.buffer.push("\n")
+      this.indentation--;
+    } else {
+      this.visit(ctx.matchMode())
+      this.visit(ctx.patternList())
+      this.visit(ctx.whereClause())
+    }
+    this.buffer.push("}")
+    return ""
+  };
 
   // Handled separately because we want ON CREATE bedfore ON MATCH
   visitMergeClause = (ctx: MergeClauseContext): string => {
