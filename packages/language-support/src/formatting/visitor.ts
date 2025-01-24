@@ -1,7 +1,7 @@
 import { CharStreams, CommonTokenStream } from "antlr4";
 import CypherCmdLexer from "../generated-parser/CypherCmdLexer";
 import CypherLexer from "../generated-parser/CypherCmdLexer";
-import CypherCmdParser, { ArrowLineContext, ClauseContext, EndOfFileContext, LabelExpressionContext, MatchClauseContext, MergeActionContext, NodePatternContext, PatternContext, PropertyContext, ReturnClauseContext, ReturnItemsContext, RightArrowContext, SymbolicNameStringContext, UnescapedSymbolicNameStringContext, VariableContext, WhereClauseContext } from "../generated-parser/CypherCmdParser";
+import CypherCmdParser, { ArrowLineContext, ClauseContext, EndOfFileContext, LabelExpressionContext, MatchClauseContext, MergeActionContext, MergeClauseContext, NodePatternContext, PatternContext, PropertyContext, ReturnClauseContext, ReturnItemsContext, RightArrowContext, SymbolicNameStringContext, UnescapedSymbolicNameStringContext, VariableContext, WhereClauseContext } from "../generated-parser/CypherCmdParser";
 import CypherCmdParserVisitor from "../generated-parser/CypherCmdParserVisitor";
 import { lexerKeywords, lexerOperators } from "../lexerSymbols";
 
@@ -99,6 +99,28 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
       this.buffer.push('\n');
     }
     return this.visitChildren(ctx);
+  }
+
+  // Handled separately because we want ON CREATE bedfore ON MATCH
+  visitMergeClause = (ctx: MergeClauseContext): string => {
+    this.visit(ctx.MERGE());
+    this.visit(ctx.pattern());
+    // ON CREATE should come before ON MATCH
+    const mergeActions = ctx.mergeAction_list()
+      .map((action, index) => ({ action, index }))
+      .sort((a, b) => {
+        if (a.action.CREATE() && b.action.MATCH()) {
+          return -1;
+        } else if (a.action.MATCH() && b.action.CREATE()) {
+          return 1;
+        }
+        return a.index - b.index;
+      })
+      .map(({ action }) => action);
+    mergeActions.forEach((action) => {
+      this.visit(action);
+    });
+    return ctx.getText();
   }
 
   // Handled separately because it wants indentation
