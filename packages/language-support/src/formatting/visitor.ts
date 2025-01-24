@@ -1,7 +1,7 @@
 import { CharStreams, CommonTokenStream } from "antlr4";
 import CypherCmdLexer from "../generated-parser/CypherCmdLexer";
 import CypherLexer from "../generated-parser/CypherCmdLexer";
-import CypherCmdParser, { ClauseContext, EndOfFileContext, MatchClauseContext, MergeActionContext, NodePatternContext, PropertyContext, ReturnClauseContext, VariableContext } from "../generated-parser/CypherCmdParser";
+import CypherCmdParser, { ClauseContext, EndOfFileContext, MatchClauseContext, MergeActionContext, NodePatternContext, PropertyContext, ReturnClauseContext, VariableContext, WhereClauseContext } from "../generated-parser/CypherCmdParser";
 import CypherCmdParserVisitor from "../generated-parser/CypherCmdParserVisitor";
 import { lexerKeywords } from "../lexerSymbols";
 
@@ -43,6 +43,13 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
     return ctx.getText();
   }
 
+  visitWhereClause = (ctx: WhereClauseContext): string => {
+    if (this.buffer.length > 0) {
+      this.buffer.push('\n');
+    }
+    return this.visitChildren(ctx);
+  }
+
   visitMergeAction = (ctx: MergeActionContext): string => {
     if (this.buffer.length > 0) {
       this.buffer.push('\n')
@@ -54,18 +61,25 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
 }
 
 
-const query = `MERGE (n) ON CREATE SET n.prop = 0
-merge (a:A)-[:T]->(b:B)
-ON MATCH SET b.name = 'you'
-ON CREATE SET a.name = 'me'
-RETURN a.prop`;
+const query1 = `MERGE (n) ON CREATE SET n.prop = 0 merge (a:A)-[:T]->(b:B) ON MATCH SET b.name = 'you' ON CREATE SET a.name = 'me' RETURN a.prop`;
+const query2 = `CREATE (n:Label {prop: 0}) WITH n, rand() AS rand RETURN rand, map.propertyKey, count(n)`
+const query3 = `MATCH (a:A) WHERE EXISTS {MATCH (a)-->(b:B) WHERE b.prop = 'yellow'} RETURN a.foo`;
+const query4 = `MATCH (n) WHERE n.name CONTAINS 's' RETURN n.name`;
 
-const inputStream = CharStreams.fromString(query);
-const lexer = new CypherLexer(inputStream);
-const tokens = new CommonTokenStream(lexer);
-const parser = new CypherCmdParser(tokens);
-parser.buildParseTrees = true
-const tree = parser.statementsOrCommands()
-const visitor = new TreePrintVisitor();
-visitor.visit(tree);
-console.log(visitor.buffer.join(''))
+function formatQuery(query: string) {
+  const inputStream = CharStreams.fromString(query);
+  const lexer = new CypherLexer(inputStream);
+  const tokens = new CommonTokenStream(lexer);
+  const parser = new CypherCmdParser(tokens);
+  parser.buildParseTrees = true
+  const tree = parser.statementsOrCommands()
+  const visitor = new TreePrintVisitor();
+  visitor.visit(tree);
+  console.log(visitor.buffer.join(''))
+  console.log();
+}
+
+formatQuery(query1)
+formatQuery(query2)
+formatQuery(query3)
+formatQuery(query4)
