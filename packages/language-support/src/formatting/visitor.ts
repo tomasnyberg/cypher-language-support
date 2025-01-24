@@ -37,6 +37,11 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
     return node.getText();
   }
 
+  visitVariable = (ctx: VariableContext): string => {
+    this.buffer.push(ctx.getText());
+    return ctx.getText();
+  }
+
   visitReturnItems = (ctx: ReturnItemsContext): string => {
     ctx.returnItem_list().forEach((item, idx) => {
       this.visit(item);
