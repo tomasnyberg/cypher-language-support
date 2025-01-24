@@ -1,7 +1,7 @@
 import { CharStreams, CommonTokenStream } from "antlr4";
 import CypherCmdLexer from "../generated-parser/CypherCmdLexer";
 import CypherLexer from "../generated-parser/CypherCmdLexer";
-import CypherCmdParser, { ClauseContext, EndOfFileContext, MatchClauseContext, ReturnClauseContext } from "../generated-parser/CypherCmdParser";
+import CypherCmdParser, { ClauseContext, EndOfFileContext, MatchClauseContext, MergeActionContext, ReturnClauseContext } from "../generated-parser/CypherCmdParser";
 import CypherCmdParserVisitor from "../generated-parser/CypherCmdParserVisitor";
 
 export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
@@ -25,10 +25,23 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
     this.buffer.push(node.getText());
     return node.getText();
   }
+
+  visitMergeAction = (ctx: MergeActionContext): string => {
+    if (this.buffer.length > 0) {
+      this.buffer.push('\n')
+      this.buffer.push('  ')
+    }
+    this.visitChildren(ctx);
+    return ctx.getText();
+  }
 }
 
 
-const query = "MATCH (n) WHERE n.name CONTAINS 's' RETURN n.name"
+const query = `MERGE (n) ON CREATE SET n.prop = 0
+MERGE (a:A)-[:T]->(b:B)
+ON MATCH SET b.name = 'you'
+ON CREATE SET a.name = 'me'
+RETURN a.prop`;
 
 const inputStream = CharStreams.fromString(query);
 const lexer = new CypherLexer(inputStream);
