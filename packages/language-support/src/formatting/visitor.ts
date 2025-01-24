@@ -8,6 +8,7 @@ import { lexerKeywords } from "../lexerSymbols";
 export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
   buffer: string[] = [];
 
+  // Handled separately because clauses shuold have newlines
   visitClause = (ctx: ClauseContext): string => {
     if (this.buffer.length > 0) {
       this.buffer.push('\n')
@@ -37,27 +38,32 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
     return node.getText();
   }
 
+  // Handled separately because variables can be keywords
   visitVariable = (ctx: VariableContext): string => {
     this.buffer.push(ctx.getText());
     return ctx.getText();
   }
 
+  // Handled separately because we want spaces between the commas
   visitReturnItems = (ctx: ReturnItemsContext): string => {
     ctx.returnItem_list().forEach((item, idx) => {
       this.visit(item);
       if (idx < ctx.returnItem_list().length - 1) {
-        this.buffer.push(', ');
+        this.buffer.push(',');
+        this.buffer.push(' ');
       }
     });
     return ctx.getText();
   }
 
+  // Handled separately because property names can be keywords
   visitProperty = (ctx: PropertyContext): string => {
     this.buffer.push('.');
     this.buffer.push(ctx.propertyKeyName().getText());
     return ctx.getText();
   }
 
+  // Handled separately because where is not a clause (it is a subclause)
   visitWhereClause = (ctx: WhereClauseContext): string => {
     if (this.buffer.length > 0) {
       this.buffer.push('\n');
@@ -65,6 +71,8 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
     return this.visitChildren(ctx);
   }
 
+  // Handled separately because it wants indentation
+  // https://neo4j.com/docs/cypher-manual/current/styleguide/#cypher-styleguide-indentation-and-line-breaks
   visitMergeAction = (ctx: MergeActionContext): string => {
     if (this.buffer.length > 0) {
       this.buffer.push('\n')
