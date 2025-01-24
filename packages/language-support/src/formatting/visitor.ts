@@ -1,7 +1,7 @@
-import { CharStreams, CommonTokenStream } from "antlr4";
+import { CharStreams, CommonTokenStream, TerminalNode } from "antlr4";
 import CypherCmdLexer from "../generated-parser/CypherCmdLexer";
 import CypherLexer from "../generated-parser/CypherCmdLexer";
-import CypherCmdParser, { ArrowLineContext, ClauseContext, EndOfFileContext, LabelExpressionContext, MatchClauseContext, MergeActionContext, MergeClauseContext, NodePatternContext, PatternContext, PropertyContext, ReturnClauseContext, ReturnItemsContext, RightArrowContext, SymbolicNameStringContext, UnescapedSymbolicNameStringContext, VariableContext, WhereClauseContext } from "../generated-parser/CypherCmdParser";
+import CypherCmdParser, { ArrowLineContext, ClauseContext, LabelExpressionContext, LeftArrowContext, MergeActionContext, MergeClauseContext, PropertyContext, ReturnItemsContext, RightArrowContext, UnescapedSymbolicNameStringContext, WhereClauseContext } from "../generated-parser/CypherCmdParser";
 import CypherCmdParserVisitor from "../generated-parser/CypherCmdParserVisitor";
 import { lexerKeywords, lexerOperators } from "../lexerSymbols";
 
@@ -32,7 +32,7 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
     return ctx.getText();
   }
 
-  visitLeftArrow = (ctx: any): string => {
+  visitLeftArrow = (ctx: LeftArrowContext): string => {
     this.buffer.push('<');
     return ctx.getText();
   }
@@ -48,14 +48,14 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
     return ctx.getText();
   }
 
-  visitTerminal = (node: any): string => {
+  visitTerminal = (node: TerminalNode): string => {
     if (this.buffer.length > 0 && this.buffer[this.buffer.length - 1] !== '\n'
       && this.buffer[this.buffer.length - 1] !== ' ') {
       if (wantsSpaces(node.symbol.type)) {
         this.buffer.push(' ');
       }
     }
-    if (node.getSymbol().type === CypherCmdLexer.EOF) {
+    if (node.symbol.type === CypherCmdLexer.EOF) {
       return node.getText();
     }
     if (lexerKeywords.includes(node.symbol.type)) {
