@@ -15,4 +15,15 @@ MERGE (a:A)-[:T]->(b:B)
 RETURN a.prop`;
     expect(formatQuery(query)).toEqual(expected);
   });
+
+  //  test('variable names example', () => {
+  //    const query = `CREATE (n:Label {prop: 0})
+  //WITH n, rand() AS rand, $param AS map
+  //RETURN rand, map.propertyKey, count(n)`;
+  //    const expected = `CREATE (n:Label {prop: 0})
+  //WITH n, rand() AS rand, $param AS map
+  //RETURN rand, map.propertyKey, count(n)`
+  //    expect(formatQuery(query)).toEqual(expected);
+  //
+  //  });
 });
