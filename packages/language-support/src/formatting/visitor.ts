@@ -23,6 +23,8 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
     return ctx.getText();
   }
 
+  // Visit these separately because operators want spaces around them, 
+  // and these are not operators (despite being minuses).
   visitArrowLine = (ctx: ArrowLineContext): string => {
     this.buffer.push('-');
     return ctx.getText();
@@ -38,6 +40,7 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
     return ctx.getText();
   }
 
+  // Handled separately since otherwise they will get weird spacing
   visitLabelExpression = (ctx: LabelExpressionContext): string => {
     if (ctx.COLON()) {
       this.buffer.push(':');
@@ -77,6 +80,7 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
     return node.getText();
   }
 
+  // Visit symbolic names here rather than in terminal so we don't mistake them as keywords
   visitUnescapedSymbolicNameString = (ctx: UnescapedSymbolicNameStringContext): string => {
     this.buffer.push(ctx.getText());
     return ctx.getText();
@@ -122,6 +126,7 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
     return this.visitChildren(ctx);
   }
 
+  // Handled separately because it contains subclauses (and thus indentation rules)
   visitExistsExpression = (ctx: ExistsExpressionContext): string => {
     this.buffer.push("EXISTS")
     this.buffer.push(" {")
@@ -180,6 +185,8 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
     return ctx.getText();
   }
 
+  // Map has its formatting rules, see:
+  // https://neo4j.com/docs/cypher-manual/current/styleguide/#cypher-styleguide-spacing
   visitMap = (ctx: MapContext): string => {
     this.buffer.push("{")
 
@@ -206,7 +213,7 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
 //const query5 = `MATCH (n)--(m)--(k)--(l) RETURN n, m, k, l`;
 //const query6 = `MATCH p=(s)-->(e) WHERE s.name<>e.name RETURN length(p)`;
 //const query7 = `MATCH (a:A) WHERE EXISTS {(a)-->(b:B)} RETURN a.prop`;
-const query8 = `RETURN user.id ORDER BY potential_reach DESC, like_count;`
+const query8 = `WITH { key1 :'value' ,key2  :  42 } AS map RETURN map`
 
 export function formatQuery(query: string) {
   const inputStream = CharStreams.fromString(query);
