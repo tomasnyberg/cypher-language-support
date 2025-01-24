@@ -41,6 +41,17 @@ RETURN a.prop`;
     expect(formatQuery(query)).toEqual(expected);
   });
 
+  test('Using wrapper space around operators', () => {
+    const query = `MATCH p=(s)-->(e)
+WHERE s.name<>e.name
+RETURN length(p)`;
+
+    const expected = `MATCH p = (s)-->(e)
+WHERE s.name <> e.name
+RETURN length(p)`;
+    expect(formatQuery(query)).toEqual(expected);
+  });
+
   //  test('variable names example', () => {
   //    const query = `CREATE (n:Label {prop: 0})
   //WITH n, rand() AS rand, $param AS map
