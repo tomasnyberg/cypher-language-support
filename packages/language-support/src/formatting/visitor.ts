@@ -1,9 +1,14 @@
 import { CharStreams, CommonTokenStream } from "antlr4";
 import CypherCmdLexer from "../generated-parser/CypherCmdLexer";
 import CypherLexer from "../generated-parser/CypherCmdLexer";
-import CypherCmdParser, { ClauseContext, EndOfFileContext, MatchClauseContext, MergeActionContext, NodePatternContext, PropertyContext, ReturnClauseContext, ReturnItemsContext, VariableContext, WhereClauseContext } from "../generated-parser/CypherCmdParser";
+import CypherCmdParser, { ArrowLineContext, ClauseContext, EndOfFileContext, MatchClauseContext, MergeActionContext, NodePatternContext, PatternContext, PropertyContext, ReturnClauseContext, ReturnItemsContext, RightArrowContext, VariableContext, WhereClauseContext } from "../generated-parser/CypherCmdParser";
 import CypherCmdParserVisitor from "../generated-parser/CypherCmdParserVisitor";
-import { lexerKeywords } from "../lexerSymbols";
+import { lexerKeywords, lexerOperators } from "../lexerSymbols";
+
+function wantsSpaces(tokenType: number): boolean {
+  return lexerKeywords.includes(tokenType) ||
+    lexerOperators.includes(tokenType);
+}
 
 export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
   buffer: string[] = [];
@@ -17,10 +22,25 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
     return ctx.getText();
   }
 
+  visitArrowLine = (ctx: ArrowLineContext): string => {
+    this.buffer.push('-');
+    return ctx.getText();
+  }
+
+  visitRightArrow = (ctx: RightArrowContext): string => {
+    this.buffer.push('>');
+    return ctx.getText();
+  }
+
+  visitLeftArrow = (ctx: any): string => {
+    this.buffer.push('<');
+    return ctx.getText();
+  }
+
   visitTerminal = (node: any): string => {
     if (this.buffer.length > 0 && this.buffer[this.buffer.length - 1] !== '\n'
       && this.buffer[this.buffer.length - 1] !== ' ') {
-      if (lexerKeywords.includes(node.symbol.type)) {
+      if (wantsSpaces(node.symbol.type)) {
         this.buffer.push(' ');
       }
     }
@@ -32,7 +52,7 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
     } else {
       this.buffer.push(node.getText());
     }
-    if (lexerKeywords.includes(node.symbol.type)) {
+    if (wantsSpaces(node.symbol.type)) {
       this.buffer.push(' ');
     }
     return node.getText();
@@ -95,6 +115,7 @@ const query2 = `CREATE (n:Label {prop: 0}) WITH n, rand() AS rand RETURN rand, m
 const query3 = `MATCH (a:A) WHERE EXISTS {MATCH (a)-->(b:B) WHERE b.prop = 'yellow'} RETURN a.foo`;
 const query4 = `MATCH (n) WHERE n.name CONTAINS 's' RETURN n.name`;
 const query5 = `MATCH (n)--(m)--(k)--(l) RETURN n, m, k, l`;
+const query6 = `MATCH p=(s)-->(e) WHERE s.name<>e.name RETURN length(p)`;
 
 function formatQuery(query: string) {
   const inputStream = CharStreams.fromString(query);
@@ -114,3 +135,4 @@ formatQuery(query2)
 formatQuery(query3)
 formatQuery(query4)
 formatQuery(query5)
+formatQuery(query6)
