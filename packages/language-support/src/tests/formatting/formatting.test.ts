@@ -16,6 +16,31 @@ RETURN a.prop`;
     expect(formatQuery(query)).toEqual(expected);
   });
 
+  test('on where exists regular subquery', () => {
+    const query = `MATCH (a:A) WHERE EXISTS {MATCH (a)-->(b:B) WHERE b.prop = 'yellow'} RETURN a.foo`;
+
+    const expected = `MATCH (a:A)
+WHERE EXISTS {
+  MATCH (a)-->(b:B)
+  WHERE b.prop = 'yellow'
+}
+RETURN a.foo`;
+    expect(formatQuery(query)).toEqual(expected);
+  });
+
+  test('on where exists regular simplified subquery', () => {
+    const query = `MATCH (a:A)
+WHERE EXISTS {
+  (a)-->(b:B)
+}
+RETURN a.prop`;
+
+    const expected = `MATCH (a:A)
+WHERE EXISTS { (a)-->(b:B) }
+RETURN a.prop`;
+    expect(formatQuery(query)).toEqual(expected);
+  });
+
   //  test('variable names example', () => {
   //    const query = `CREATE (n:Label {prop: 0})
   //WITH n, rand() AS rand, $param AS map
