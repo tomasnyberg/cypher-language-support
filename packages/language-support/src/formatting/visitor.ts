@@ -118,9 +118,16 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
       this.buffer.push("\n")
       this.indentation--;
     } else {
-      this.visit(ctx.matchMode())
+      this.buffer.push(" ")
+      if (ctx.matchMode()) {
+        this.visit(ctx.matchMode())
+      }
       this.visit(ctx.patternList())
-      this.visit(ctx.whereClause())
+      if (ctx.whereClause()) {
+        this.visit(ctx.whereClause())
+      }
+      this.buffer.push(" ")
+
     }
     this.buffer.push("}")
     return ""
@@ -168,6 +175,7 @@ const query3 = `MATCH (a:A) WHERE EXISTS {MATCH (a)-->(b:B) WHERE b.prop = 'yell
 const query4 = `MATCH (n) WHERE n.name CONTAINS 's' RETURN n.name`;
 const query5 = `MATCH (n)--(m)--(k)--(l) RETURN n, m, k, l`;
 const query6 = `MATCH p=(s)-->(e) WHERE s.name<>e.name RETURN length(p)`;
+const query7 = `MATCH (a:A) WHERE EXISTS {(a)-->(b:B)} RETURN a.prop`;
 
 export function formatQuery(query: string) {
   const inputStream = CharStreams.fromString(query);
@@ -189,3 +197,5 @@ formatQuery(query3)
 formatQuery(query4)
 formatQuery(query5)
 formatQuery(query6)
+formatQuery(query7)
+
