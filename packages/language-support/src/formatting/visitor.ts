@@ -1,7 +1,7 @@
 import { CharStreams, CommonTokenStream } from "antlr4";
 import CypherCmdLexer from "../generated-parser/CypherCmdLexer";
 import CypherLexer from "../generated-parser/CypherCmdLexer";
-import CypherCmdParser, { ArrowLineContext, ClauseContext, EndOfFileContext, MatchClauseContext, MergeActionContext, NodePatternContext, PatternContext, PropertyContext, ReturnClauseContext, ReturnItemsContext, RightArrowContext, VariableContext, WhereClauseContext } from "../generated-parser/CypherCmdParser";
+import CypherCmdParser, { ArrowLineContext, ClauseContext, EndOfFileContext, LabelExpressionContext, MatchClauseContext, MergeActionContext, NodePatternContext, PatternContext, PropertyContext, ReturnClauseContext, ReturnItemsContext, RightArrowContext, SymbolicNameStringContext, UnescapedSymbolicNameStringContext, VariableContext, WhereClauseContext } from "../generated-parser/CypherCmdParser";
 import CypherCmdParserVisitor from "../generated-parser/CypherCmdParserVisitor";
 import { lexerKeywords, lexerOperators } from "../lexerSymbols";
 
@@ -37,6 +37,17 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
     return ctx.getText();
   }
 
+  visitLabelExpression = (ctx: LabelExpressionContext): string => {
+    if (ctx.COLON()) {
+      this.buffer.push(':');
+    }
+    if (ctx.IS()) {
+      this.buffer.push('IS');
+    }
+    this.visit(ctx.labelExpression4());
+    return ctx.getText();
+  }
+
   visitTerminal = (node: any): string => {
     if (this.buffer.length > 0 && this.buffer[this.buffer.length - 1] !== '\n'
       && this.buffer[this.buffer.length - 1] !== ' ') {
@@ -58,14 +69,7 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
     return node.getText();
   }
 
-  // Handled separately because variables can be keywords
-  visitVariable = (ctx: VariableContext): string => {
-    this.buffer.push(ctx.getText());
-    return ctx.getText();
-  }
-
-  // Handled separately because function names can be keywords
-  visitFunctionName = (ctx: any): string => {
+  visitUnescapedSymbolicNameString = (ctx: UnescapedSymbolicNameStringContext): string => {
     this.buffer.push(ctx.getText());
     return ctx.getText();
   }
