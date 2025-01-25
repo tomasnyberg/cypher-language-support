@@ -18,6 +18,16 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
     super();
   }
 
+  addCommentsBefore = (node: TerminalNode) => {
+    const token = node.symbol;
+    const hiddenTokens = this.tokenStream.getHiddenTokensToLeft(token.tokenIndex);
+    const commentTokens = (hiddenTokens || []).filter((token) => token.type == 12 || token.type == 13);
+    for (const commentToken of commentTokens) {
+      this.buffer.push(commentToken.text.trim());
+      this.buffer.push('\n');
+    }
+  }
+
   addCommentsAfter = (node: TerminalNode) => {
     const token = node.symbol;
     const hiddenTokens = this.tokenStream.getHiddenTokensToRight(token.tokenIndex);
@@ -26,7 +36,7 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
       if (this.buffer.length > 0 && this.buffer[this.buffer.length - 1] !== ' ') {
         this.buffer.push(' ');
       }
-      this.buffer.push(commentToken.text);
+      this.buffer.push(commentToken.text.trim());
     }
   }
 
@@ -70,6 +80,9 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
   }
 
   visitTerminal = (node: TerminalNode): string => {
+    if (this.buffer.length === 0) {
+      this.addCommentsBefore(node);
+    }
     if (this.buffer.length > 0 && this.buffer[this.buffer.length - 1] === '\n') {
       for (let i = 0; i < this.indentation; i++) {
         this.buffer.push(" ")

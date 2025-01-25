@@ -66,12 +66,13 @@ RETURN map`;
   });
 
   test('basic inline comments', () => {
+    // Whitespace after the comment lines is intentional. It shuold be removed
     const inlinecomments = `
-MERGE (n) ON CREATE SET n.prop = 0 // Ensure 'n' exists and initialize 'prop' to 0 if created
-MERGE (a:A)-[:T]->(b:B)           // Create or match a relationship from 'a:A' to 'b:B'
-ON MATCH SET b.name = 'you'       // If 'b' already exists, set its 'name' to 'you'
-ON CREATE SET a.name = 'me'       // If 'a' is created, set its 'name' to 'me'
-RETURN a.prop                     // Return the 'prop' of 'a'
+MERGE (n) ON CREATE SET n.prop = 0 // Ensure 'n' exists and initialize 'prop' to 0 if created   
+MERGE (a:A)-[:T]->(b:B)           // Create or match a relationship from 'a:A' to 'b:B'     
+ON MATCH SET b.name = 'you'       // If 'b' already exists, set its 'name' to 'you'       
+ON CREATE SET a.name = 'me'       // If 'a' is created, set its 'name' to 'me'       
+RETURN a.prop                     // Return the 'prop' of 'a'       
 `;
     const expected = `MERGE (n)
   ON CREATE SET n.prop = 0 // Ensure 'n' exists and initialize 'prop' to 0 if created
@@ -80,8 +81,25 @@ MERGE (a:A)-[:T]->(b:B) // Create or match a relationship from 'a:A' to 'b:B'
   ON MATCH SET b.name = 'you' // If 'b' already exists, set its 'name' to 'you'
 RETURN a.prop`
     expect(formatQuery(inlinecomments)).toEqual(expected);
-
   })
+
+  test('comments before the query', () => {
+    const inlinecommentbefore = `// This is a comment before everything
+MATCH (n) return n`;
+    const expected = `// This is a comment before everything
+MATCH (n)
+RETURN n`;
+    expect(formatQuery(inlinecommentbefore)).toEqual(expected);
+
+    const multilinecommentbefore = `/* This is a comment before everything
+And it spans multiple lines */
+MATCH (n) return n`;
+    const expected2 = `/* This is a comment before everything
+And it spans multiple lines */
+MATCH (n)
+RETURN n`;
+    expect(formatQuery(multilinecommentbefore)).toEqual(expected2);
+  });
   //  test('variable names example', () => {
   //    const query = `CREATE (n:Label {prop: 0})
   //WITH n, rand() AS rand, $param AS map
