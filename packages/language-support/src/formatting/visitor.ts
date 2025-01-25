@@ -1,7 +1,7 @@
 import { CharStreams, CommonTokenStream, TerminalNode } from "antlr4";
 import CypherCmdLexer from "../generated-parser/CypherCmdLexer";
 import CypherLexer from "../generated-parser/CypherCmdLexer";
-import CypherCmdParser, { ArrowLineContext, BooleanLiteralContext, ClauseContext, CountStarContext, EscapedSymbolicNameStringContext, ExistsExpressionContext, KeywordLiteralContext, LabelExpressionContext, LeftArrowContext, LiteralContext, MapContext, MergeActionContext, MergeClauseContext, NodePatternContext, OrderByContext, PropertyContext, RelationshipPatternContext, ReturnItemsContext, RightArrowContext, UnescapedSymbolicNameStringContext, UnescapedSymbolicNameString_Context, WhereClauseContext } from "../generated-parser/CypherCmdParser";
+import CypherCmdParser, { ArrowLineContext, BooleanLiteralContext, ClauseContext, CountStarContext, EscapedSymbolicNameStringContext, ExistsExpressionContext, KeywordLiteralContext, LabelExpressionContext, LeftArrowContext, ListLiteralContext, LiteralContext, MapContext, MergeActionContext, MergeClauseContext, NodePatternContext, OrderByContext, PatternListContext, PropertyContext, RelationshipPatternContext, ReturnItemsContext, RightArrowContext, UnescapedSymbolicNameStringContext, UnescapedSymbolicNameString_Context, WhereClauseContext } from "../generated-parser/CypherCmdParser";
 import CypherCmdParserVisitor from "../generated-parser/CypherCmdParserVisitor";
 import { lexerKeywords, lexerOperators } from "../lexerSymbols";
 import { Token } from "antlr4";
@@ -155,6 +155,30 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
         this.buffer.push(' ');
       }
     });
+    return ctx.getText();
+  }
+
+  visitPatternList = (ctx: PatternListContext): string => {
+    ctx.pattern_list().forEach((pattern, idx) => {
+      this.visit(pattern);
+      if (idx < ctx.pattern_list().length - 1) {
+        this.buffer.push(',');
+        this.buffer.push(' ');
+      }
+    });
+    return ctx.getText();
+  }
+
+  visitListLiteral = (ctx: ListLiteralContext): string => {
+    this.visit(ctx.LBRACKET());
+    ctx.expression_list().forEach((expression, idx) => {
+      this.visit(expression);
+      if (idx < ctx.expression_list().length - 1) {
+        this.buffer.push(',');
+        this.buffer.push(' ');
+      }
+    });
+    this.visit(ctx.RBRACKET());
     return ctx.getText();
   }
 

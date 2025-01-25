@@ -177,6 +177,23 @@ RETURN null, true, false`;
     const expected = 'MATCH (:Person)-->(:Vehicle)\nRETURN count(*)'
     expect(formatQuery(query)).toEqual(expected);
   });
+
+  test('space after each comma in lists and enumerations', () => {
+    const query = `MATCH (),()
+WITH ['a','b',3.14] AS list
+RETURN list,2,3,4`
+    const expected = `MATCH (), ()
+WITH ['a', 'b', 3.14] AS list
+RETURN list, 2, 3, 4`
+    expect(formatQuery(query)).toEqual(expected);
+  });
+
+  test('handles empty list literals', () => {
+    const query = `WITH [] AS emptyList RETURN emptyList`
+    const expected = `WITH [] AS emptyList
+RETURN emptyList`
+    expect(formatQuery(query)).toEqual(expected);
+  });
   //  test('variable names example', () => {
   //    const query = `CREATE (n:Label {prop: 0})
   //WITH n, rand() AS rand, $param AS map
