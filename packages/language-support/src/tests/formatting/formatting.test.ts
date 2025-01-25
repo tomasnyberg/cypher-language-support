@@ -65,6 +65,23 @@ RETURN map`;
     expect(formatQuery(query)).toEqual(expected);
   });
 
+  test('basic inline comments', () => {
+    const inlinecomments = `
+MERGE (n) ON CREATE SET n.prop = 0 // Ensure 'n' exists and initialize 'prop' to 0 if created
+MERGE (a:A)-[:T]->(b:B)           // Create or match a relationship from 'a:A' to 'b:B'
+ON MATCH SET b.name = 'you'       // If 'b' already exists, set its 'name' to 'you'
+ON CREATE SET a.name = 'me'       // If 'a' is created, set its 'name' to 'me'
+RETURN a.prop                     // Return the 'prop' of 'a'
+`;
+    const expected = `MERGE (n)
+  ON CREATE SET n.prop = 0 // Ensure 'n' exists and initialize 'prop' to 0 if created
+MERGE (a:A)-[:T]->(b:B) // Create or match a relationship from 'a:A' to 'b:B'
+  ON CREATE SET a.name = 'me' // If 'a' is created, set its 'name' to 'me'
+  ON MATCH SET b.name = 'you' // If 'b' already exists, set its 'name' to 'you'
+RETURN a.prop`
+    expect(formatQuery(inlinecomments)).toEqual(expected);
+
+  })
   //  test('variable names example', () => {
   //    const query = `CREATE (n:Label {prop: 0})
   //WITH n, rand() AS rand, $param AS map
