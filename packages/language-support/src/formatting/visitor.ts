@@ -4,6 +4,7 @@ import CypherLexer from "../generated-parser/CypherCmdLexer";
 import CypherCmdParser, { ArrowLineContext, BooleanLiteralContext, ClauseContext, EscapedSymbolicNameStringContext, ExistsExpressionContext, KeywordLiteralContext, LabelExpressionContext, LeftArrowContext, LiteralContext, MapContext, MergeActionContext, MergeClauseContext, OrderByContext, PropertyContext, ReturnItemsContext, RightArrowContext, UnescapedSymbolicNameStringContext, UnescapedSymbolicNameString_Context, WhereClauseContext } from "../generated-parser/CypherCmdParser";
 import CypherCmdParserVisitor from "../generated-parser/CypherCmdParserVisitor";
 import { lexerKeywords, lexerOperators } from "../lexerSymbols";
+import { Token } from "antlr4";
 
 function wantsToBeUpperCase(node: TerminalNode): boolean {
   return isKeywordTerminal(node);
@@ -16,6 +17,11 @@ function wantsSpaces(node: TerminalNode): boolean {
 
 function isKeywordTerminal(node: TerminalNode): boolean {
   return lexerKeywords.includes(node.symbol.type) && !isSymbolicName(node);
+}
+
+function is_comment(token: Token) {
+  return token.type === CypherCmdLexer.MULTI_LINE_COMMENT
+    || token.type === CypherCmdLexer.SINGLE_LINE_COMMENT;
 }
 
 // Variables or property names that have the same name as a keyword should not be
@@ -36,7 +42,7 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
   addCommentsBefore = (node: TerminalNode) => {
     const token = node.symbol;
     const hiddenTokens = this.tokenStream.getHiddenTokensToLeft(token.tokenIndex);
-    const commentTokens = (hiddenTokens || []).filter((token) => token.type == 12 || token.type == 13);
+    const commentTokens = (hiddenTokens || []).filter((token) => is_comment(token));
     for (const commentToken of commentTokens) {
       this.buffer.push(commentToken.text.trim());
       this.buffer.push('\n');
@@ -46,7 +52,7 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
   addCommentsAfter = (node: TerminalNode) => {
     const token = node.symbol;
     const hiddenTokens = this.tokenStream.getHiddenTokensToRight(token.tokenIndex);
-    const commentTokens = (hiddenTokens || []).filter((token) => token.type == 12 || token.type == 13);
+    const commentTokens = (hiddenTokens || []).filter((token) => is_comment(token));
     for (const commentToken of commentTokens) {
       if (this.buffer.length > 0 && this.buffer[this.buffer.length - 1] !== ' ' &&
         this.buffer[this.buffer.length - 1] !== '\n') {
