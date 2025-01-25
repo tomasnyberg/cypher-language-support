@@ -1,7 +1,7 @@
 import { CharStreams, CommonTokenStream, TerminalNode } from "antlr4";
 import CypherCmdLexer from "../generated-parser/CypherCmdLexer";
 import CypherLexer from "../generated-parser/CypherCmdLexer";
-import CypherCmdParser, { ArrowLineContext, BooleanLiteralContext, ClauseContext, EscapedSymbolicNameStringContext, ExistsExpressionContext, KeywordLiteralContext, LabelExpressionContext, LeftArrowContext, LiteralContext, MapContext, MergeActionContext, MergeClauseContext, OrderByContext, PropertyContext, ReturnItemsContext, RightArrowContext, UnescapedSymbolicNameStringContext, UnescapedSymbolicNameString_Context, WhereClauseContext } from "../generated-parser/CypherCmdParser";
+import CypherCmdParser, { ArrowLineContext, BooleanLiteralContext, ClauseContext, EscapedSymbolicNameStringContext, ExistsExpressionContext, KeywordLiteralContext, LabelExpressionContext, LeftArrowContext, LiteralContext, MapContext, MergeActionContext, MergeClauseContext, NodePatternContext, OrderByContext, PropertyContext, RelationshipPatternContext, ReturnItemsContext, RightArrowContext, UnescapedSymbolicNameStringContext, UnescapedSymbolicNameString_Context, WhereClauseContext } from "../generated-parser/CypherCmdParser";
 import CypherCmdParserVisitor from "../generated-parser/CypherCmdParserVisitor";
 import { lexerKeywords, lexerOperators } from "../lexerSymbols";
 import { Token } from "antlr4";
@@ -175,6 +175,53 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
       this.buffer.push("NaN");
     } else {
       this.buffer.push(ctx.getText());
+    }
+    return ctx.getText();
+  }
+
+  // The patterns are handled separately because we need spaces 
+  // between labels and property predicates in patterns
+  handleInnerPatternContext = (ctx: NodePatternContext | RelationshipPatternContext) => {
+    if (ctx.variable()) {
+      this.visit(ctx.variable());
+    }
+    if (ctx.labelExpression()) {
+      this.visit(ctx.labelExpression());
+    }
+    if (ctx.labelExpression() && ctx.properties()) {
+      this.buffer.push(' ');
+    }
+    if (ctx.properties()) {
+      this.visit(ctx.properties());
+    }
+    if (ctx.WHERE()) {
+      this.visit(ctx.WHERE());
+      this.visit(ctx.expression());
+    }
+  }
+
+  visitNodePattern = (ctx: NodePatternContext): string => {
+    this.visit(ctx.LPAREN());
+    this.handleInnerPatternContext(ctx);
+    this.visit(ctx.RPAREN());
+    return ctx.getText();
+  }
+
+  visitRelationshipPattern = (ctx: RelationshipPatternContext): string => {
+    if (ctx.leftArrow()) {
+      this.visit(ctx.leftArrow());
+    }
+    // TODO: the buffer.push('-') might have to be handled differently, as this doesn't
+    // visit the terminal and thus might miss e.g. comments.
+    this.buffer.push('-');
+    if (ctx.LBRACKET()) {
+      this.visit(ctx.LBRACKET());
+      this.handleInnerPatternContext(ctx);
+      this.visit(ctx.RBRACKET());
+    }
+    this.buffer.push('-');
+    if (ctx.rightArrow()) {
+      this.visit(ctx.rightArrow());
     }
     return ctx.getText();
   }

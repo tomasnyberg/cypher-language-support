@@ -165,6 +165,12 @@ RETURN null, true, false`;
     const expected3 = 'MATCH (INF)\nRETURN INF';
     expect(formatQuery(query3)).toEqual(expected3);
   })
+
+  test('puts one space between label/type predicates and property predicates in patterns', () => {
+    const query = `MATCH (p:Person{property:-1})-[:KNOWS{since: 2016}]->() RETURN p.name`
+    const expected = `MATCH (p:Person {property: -1})-[:KNOWS {since: 2016}]->()\nRETURN p.name`
+    expect(formatQuery(query)).toEqual(expected);
+  });
   //  test('variable names example', () => {
   //    const query = `CREATE (n:Label {prop: 0})
   //WITH n, rand() AS rand, $param AS map
