@@ -114,8 +114,27 @@ MERGE (a:A) /* Create or match 'a:A' */
 -[:T]->(b:B) /* Link 'a' to 'b' */
 RETURN a.prop /* Return the property of 'a' */`;
     expect(formatQuery(inlinemultiline)).toEqual(expected);
-
   });
+
+  test('weird inline and multiline comments', () => {
+    const inlineandmultiline = `MERGE (n) // Ensure node exists
+ON CREATE SET n.prop = 0 /* Default value */
+/* Match or create a relationship
+   and update properties as needed */    
+MERGE (a:A) -[:T]-> (b:B)
+ON CREATE SET a.name='me'// Name set during creation
+ON MATCH SET b.name='you' /* Update name if matched */
+RETURN a.prop// Output the result`;
+    const expected = `MERGE (n) // Ensure node exists
+  ON CREATE SET n.prop = 0 /* Default value */
+/* Match or create a relationship
+   and update properties as needed */
+MERGE (a:A)-[:T]->(b:B)
+  ON CREATE SET a.name = 'me' // Name set during creation
+  ON MATCH SET b.name = 'you' /* Update name if matched */
+RETURN a.prop // Output the result`;
+    expect(formatQuery(inlineandmultiline)).toEqual(expected);
+  })
 
   test('escaped names', () => {
     const query = 'CREATE (`complex name with special@chars`) RETURN `complex name with special@chars`';

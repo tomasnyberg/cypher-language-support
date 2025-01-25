@@ -44,7 +44,8 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
     const hiddenTokens = this.tokenStream.getHiddenTokensToRight(token.tokenIndex);
     const commentTokens = (hiddenTokens || []).filter((token) => token.type == 12 || token.type == 13);
     for (const commentToken of commentTokens) {
-      if (this.buffer.length > 0 && this.buffer[this.buffer.length - 1] !== ' ') {
+      if (this.buffer.length > 0 && this.buffer[this.buffer.length - 1] !== ' ' &&
+        this.buffer[this.buffer.length - 1] !== '\n') {
         this.buffer.push(' ');
       }
       this.buffer.push(commentToken.text.trim());
