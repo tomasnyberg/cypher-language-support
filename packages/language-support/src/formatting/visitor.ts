@@ -1,9 +1,13 @@
 import { CharStreams, CommonTokenStream, TerminalNode } from "antlr4";
 import CypherCmdLexer from "../generated-parser/CypherCmdLexer";
 import CypherLexer from "../generated-parser/CypherCmdLexer";
-import CypherCmdParser, { ArrowLineContext, ClauseContext, EscapedSymbolicNameStringContext, ExistsExpressionContext, LabelExpressionContext, LeftArrowContext, MapContext, MergeActionContext, MergeClauseContext, OrderByContext, PropertyContext, ReturnItemsContext, RightArrowContext, UnescapedSymbolicNameStringContext, UnescapedSymbolicNameString_Context, WhereClauseContext } from "../generated-parser/CypherCmdParser";
+import CypherCmdParser, { ArrowLineContext, BooleanLiteralContext, ClauseContext, EscapedSymbolicNameStringContext, ExistsExpressionContext, KeywordLiteralContext, LabelExpressionContext, LeftArrowContext, LiteralContext, MapContext, MergeActionContext, MergeClauseContext, OrderByContext, PropertyContext, ReturnItemsContext, RightArrowContext, UnescapedSymbolicNameStringContext, UnescapedSymbolicNameString_Context, WhereClauseContext } from "../generated-parser/CypherCmdParser";
 import CypherCmdParserVisitor from "../generated-parser/CypherCmdParserVisitor";
 import { lexerKeywords, lexerOperators } from "../lexerSymbols";
+
+function wantsToBeUpperCase(node: TerminalNode): boolean {
+  return isKeywordTerminal(node);
+}
 
 function wantsSpaces(node: TerminalNode): boolean {
   return isKeywordTerminal(node) ||
@@ -116,7 +120,7 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
     if (node.symbol.type === CypherCmdLexer.EOF) {
       return node.getText();
     }
-    if (isKeywordTerminal(node)) {
+    if (wantsToBeUpperCase(node)) {
       this.buffer.push(node.getText().toUpperCase());
     } else {
       this.buffer.push(node.getText());
@@ -150,6 +154,22 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
         this.buffer.push(' ');
       }
     });
+    return ctx.getText();
+  }
+
+  visitBooleanLiteral = (ctx: BooleanLiteralContext): string => {
+    this.buffer.push(ctx.getText().toLowerCase());
+    return ctx.getText();
+  }
+
+  visitKeywordLiteral = (ctx: KeywordLiteralContext): string => {
+    if (ctx.NULL()) {
+      this.buffer.push(ctx.getText().toLowerCase());
+    } else if (ctx.NAN()) {
+      this.buffer.push("NaN");
+    } else {
+      this.buffer.push(ctx.getText());
+    }
     return ctx.getText();
   }
 

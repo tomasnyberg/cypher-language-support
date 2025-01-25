@@ -141,6 +141,30 @@ RETURN a.prop // Output the result`;
     const expected = 'CREATE (`complex name with special@chars`)\nRETURN `complex name with special@chars`';
     expect(formatQuery(query)).toEqual(expected);
   });
+
+  test('cases null and booleans properly', () => {
+    const query = `WITH NULL as n1, Null as n2, False as f1, True as t1 RETURN NULL, TRUE, FALSE`;
+    const expected = `WITH null AS n1, null AS n2, false AS f1, true AS t1
+RETURN null, true, false`;
+    expect(formatQuery(query)).toEqual(expected);
+  });
+
+  test('can handle using keyword literal names in weird ways', () => {
+    const query1 = 'MATCH (NULL) RETURN NULL';
+    // The first one is a symbolic name, the second one is a literal
+    const expected1 = 'MATCH (NULL)\nRETURN null';
+    expect(formatQuery(query1)).toEqual(expected1);
+
+    const query2 = 'MATCH (NAN) RETURN NAN';
+    // The first one is a symbolic name, the second one is a literal
+    const expected2 = 'MATCH (NAN)\nRETURN NaN';
+    expect(formatQuery(query2)).toEqual(expected2);
+
+    const query3 = 'MATCH (INF) RETURN INF';
+    // The first one is a symbolic name, the second one is a literal
+    const expected3 = 'MATCH (INF)\nRETURN INF';
+    expect(formatQuery(query3)).toEqual(expected3);
+  })
   //  test('variable names example', () => {
   //    const query = `CREATE (n:Label {prop: 0})
   //WITH n, rand() AS rand, $param AS map
