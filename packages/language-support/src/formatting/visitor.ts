@@ -1,7 +1,7 @@
 import { CharStreams, CommonTokenStream, TerminalNode } from "antlr4";
 import CypherCmdLexer from "../generated-parser/CypherCmdLexer";
 import CypherLexer from "../generated-parser/CypherCmdLexer";
-import CypherCmdParser, { ArrowLineContext, BooleanLiteralContext, ClauseContext, EscapedSymbolicNameStringContext, ExistsExpressionContext, KeywordLiteralContext, LabelExpressionContext, LeftArrowContext, LiteralContext, MapContext, MergeActionContext, MergeClauseContext, NodePatternContext, OrderByContext, PropertyContext, RelationshipPatternContext, ReturnItemsContext, RightArrowContext, UnescapedSymbolicNameStringContext, UnescapedSymbolicNameString_Context, WhereClauseContext } from "../generated-parser/CypherCmdParser";
+import CypherCmdParser, { ArrowLineContext, BooleanLiteralContext, ClauseContext, CountStarContext, EscapedSymbolicNameStringContext, ExistsExpressionContext, KeywordLiteralContext, LabelExpressionContext, LeftArrowContext, LiteralContext, MapContext, MergeActionContext, MergeClauseContext, NodePatternContext, OrderByContext, PropertyContext, RelationshipPatternContext, ReturnItemsContext, RightArrowContext, UnescapedSymbolicNameStringContext, UnescapedSymbolicNameString_Context, WhereClauseContext } from "../generated-parser/CypherCmdParser";
 import CypherCmdParserVisitor from "../generated-parser/CypherCmdParserVisitor";
 import { lexerKeywords, lexerOperators } from "../lexerSymbols";
 import { Token } from "antlr4";
@@ -91,6 +91,14 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
 
   visitLeftArrow = (ctx: LeftArrowContext): string => {
     this.buffer.push('<');
+    return ctx.getText();
+  }
+
+  visitCountStar = (ctx: CountStarContext): string => {
+    this.buffer.push(ctx.COUNT().getText());
+    this.visit(ctx.LPAREN());
+    this.buffer.push('*');
+    this.visit(ctx.RPAREN());
     return ctx.getText();
   }
 

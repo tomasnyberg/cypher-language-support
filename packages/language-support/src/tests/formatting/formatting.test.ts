@@ -171,6 +171,12 @@ RETURN null, true, false`;
     const expected = `MATCH (p:Person {property: -1})-[:KNOWS {since: 2016}]->()\nRETURN p.name`
     expect(formatQuery(query)).toEqual(expected);
   });
+
+  test('no space in patterns', () => {
+    const query = 'MATCH (:Person) --> (:Vehicle) RETURN count(*)'
+    const expected = 'MATCH (:Person)-->(:Vehicle)\nRETURN count(*)'
+    expect(formatQuery(query)).toEqual(expected);
+  });
   //  test('variable names example', () => {
   //    const query = `CREATE (n:Label {prop: 0})
   //WITH n, rand() AS rand, $param AS map
