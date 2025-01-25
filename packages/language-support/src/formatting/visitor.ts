@@ -1,13 +1,17 @@
 import { CharStreams, CommonTokenStream, TerminalNode } from "antlr4";
 import CypherCmdLexer from "../generated-parser/CypherCmdLexer";
 import CypherLexer from "../generated-parser/CypherCmdLexer";
-import CypherCmdParser, { ArrowLineContext, ClauseContext, ExistsExpressionContext, LabelExpressionContext, LeftArrowContext, MapContext, MergeActionContext, MergeClauseContext, OrderByContext, PropertyContext, ReturnItemsContext, RightArrowContext, UnescapedSymbolicNameStringContext, WhereClauseContext } from "../generated-parser/CypherCmdParser";
+import CypherCmdParser, { ArrowLineContext, ClauseContext, ExistsExpressionContext, LabelExpressionContext, LeftArrowContext, MapContext, MergeActionContext, MergeClauseContext, OrderByContext, PropertyContext, ReturnItemsContext, RightArrowContext, UnescapedSymbolicNameStringContext, UnescapedSymbolicNameString_Context, WhereClauseContext } from "../generated-parser/CypherCmdParser";
 import CypherCmdParserVisitor from "../generated-parser/CypherCmdParserVisitor";
 import { lexerKeywords, lexerOperators } from "../lexerSymbols";
 
-function wantsSpaces(tokenType: number): boolean {
-  return lexerKeywords.includes(tokenType) ||
-    lexerOperators.includes(tokenType);
+function wantsSpaces(node: TerminalNode): boolean {
+  return isKeywordTerminal(node) ||
+    lexerOperators.includes(node.symbol.type);
+}
+
+function isKeywordTerminal(node: TerminalNode): boolean {
+  return lexerKeywords.includes(node.symbol.type) && !(node.parentCtx instanceof UnescapedSymbolicNameString_Context);
 }
 
 export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
@@ -37,15 +41,20 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
         this.buffer.push(' ');
       }
       this.buffer.push(commentToken.text.trim());
+      this.breakLine();
+    }
+  }
+
+  breakLine = () => {
+    if (this.buffer.length > 0 && this.buffer[this.buffer.length - 1] !== '\n') {
+      this.buffer.push('\n');
     }
   }
 
 
   // Handled separately because clauses shuold have newlines
   visitClause = (ctx: ClauseContext): string => {
-    if (this.buffer.length > 0) {
-      this.buffer.push('\n')
-    }
+    this.breakLine();
     this.visitChildren(ctx);
     return ctx.getText();
   }
@@ -92,29 +101,23 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
 
     if (this.buffer.length > 0 && this.buffer[this.buffer.length - 1] !== '\n'
       && this.buffer[this.buffer.length - 1] !== ' ') {
-      if (wantsSpaces(node.symbol.type)) {
+      if (wantsSpaces(node)) {
         this.buffer.push(' ');
       }
     }
     if (node.symbol.type === CypherCmdLexer.EOF) {
       return node.getText();
     }
-    if (lexerKeywords.includes(node.symbol.type)) {
+    if (isKeywordTerminal(node)) {
       this.buffer.push(node.getText().toUpperCase());
     } else {
       this.buffer.push(node.getText());
     }
-    if (wantsSpaces(node.symbol.type)) {
+    if (wantsSpaces(node)) {
       this.buffer.push(' ');
     }
     this.addCommentsAfter(node);
     return node.getText();
-  }
-
-  // Visit symbolic names here rather than in terminal so we don't mistake them as keywords
-  visitUnescapedSymbolicNameString = (ctx: UnescapedSymbolicNameStringContext): string => {
-    this.buffer.push(ctx.getText());
-    return ctx.getText();
   }
 
   // Handled separately because we want spaces between the commas
@@ -142,18 +145,16 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
     return ctx.getText();
   }
 
-  // Handled separately because property names can be keywords
+  // Handled separately because the dot is not an operator
   visitProperty = (ctx: PropertyContext): string => {
     this.buffer.push('.');
-    this.buffer.push(ctx.propertyKeyName().getText());
+    this.visit(ctx.propertyKeyName());
     return ctx.getText();
   }
 
   // Handled separately because where is not a clause (it is a subclause)
   visitWhereClause = (ctx: WhereClauseContext): string => {
-    if (this.buffer.length > 0) {
-      this.buffer.push('\n');
-    }
+    this.breakLine();
     return this.visitChildren(ctx);
   }
 
@@ -208,7 +209,7 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
   // https://neo4j.com/docs/cypher-manual/current/styleguide/#cypher-styleguide-indentation-and-line-breaks
   visitMergeAction = (ctx: MergeActionContext): string => {
     if (this.buffer.length > 0) {
-      this.buffer.push('\n')
+      this.breakLine();
       this.buffer.push(' ')
       this.buffer.push(' ')
     }
@@ -236,16 +237,6 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
   }
 }
 
-const inlinecomments = `
-// This is a comment before everything
-MERGE (n) ON CREATE SET n.prop = 0 // Ensure 'n' exists and initialize 'prop' to 0 if created
-MERGE (a:A)-[:T]->(b:B)           // Create or match a relationship from 'a:A' to 'b:B'
-ON MATCH SET b.name = 'you'       // If 'b' already exists, set its 'name' to 'you'
-ON CREATE SET a.name = 'me'       // If 'a' is created, set its 'name' to 'me'
-RETURN a.prop                     // Return the 'prop' of 'a'
-`;
-
-
 export function formatQuery(query: string) {
   const inputStream = CharStreams.fromString(query);
   const lexer = new CypherLexer(inputStream);
@@ -256,7 +247,6 @@ export function formatQuery(query: string) {
   const visitor = new TreePrintVisitor(tokens);
   visitor.visit(tree);
   console.log(visitor.buffer.join(''))
-  return visitor.buffer.join('');
+  return visitor.buffer.join('').trim();
 }
-formatQuery(inlinecomments)
 

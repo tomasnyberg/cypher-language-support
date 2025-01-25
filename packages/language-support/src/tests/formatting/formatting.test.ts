@@ -79,7 +79,7 @@ RETURN a.prop                     // Return the 'prop' of 'a'
 MERGE (a:A)-[:T]->(b:B) // Create or match a relationship from 'a:A' to 'b:B'
   ON CREATE SET a.name = 'me' // If 'a' is created, set its 'name' to 'me'
   ON MATCH SET b.name = 'you' // If 'b' already exists, set its 'name' to 'you'
-RETURN a.prop`
+RETURN a.prop // Return the 'prop' of 'a'`;
     expect(formatQuery(inlinecomments)).toEqual(expected);
   })
 
@@ -99,6 +99,22 @@ And it spans multiple lines */
 MATCH (n)
 RETURN n`;
     expect(formatQuery(multilinecommentbefore)).toEqual(expected2);
+  });
+
+  test('weird inline comments', () => {
+    const inlinemultiline = `MERGE (n) /* Ensuring the node exists */ 
+  ON CREATE SET n.prop = 0 /* Set default property */
+MERGE (a:A) /* Create or match 'a:A' */ 
+  -[:T]-> (b:B) /* Link 'a' to 'b' */
+RETURN a.prop /* Return the property of 'a' */
+`
+    const expected = `MERGE (n) /* Ensuring the node exists */
+  ON CREATE SET n.prop = 0 /* Set default property */
+MERGE (a:A) /* Create or match 'a:A' */
+-[:T]->(b:B) /* Link 'a' to 'b' */
+RETURN a.prop /* Return the property of 'a' */`;
+    expect(formatQuery(inlinemultiline)).toEqual(expected);
+
   });
   //  test('variable names example', () => {
   //    const query = `CREATE (n:Label {prop: 0})
