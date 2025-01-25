@@ -1,7 +1,7 @@
 import { CharStreams, CommonTokenStream, TerminalNode } from "antlr4";
 import CypherCmdLexer from "../generated-parser/CypherCmdLexer";
 import CypherLexer from "../generated-parser/CypherCmdLexer";
-import CypherCmdParser, { ArrowLineContext, ClauseContext, ExistsExpressionContext, LabelExpressionContext, LeftArrowContext, MapContext, MergeActionContext, MergeClauseContext, OrderByContext, PropertyContext, ReturnItemsContext, RightArrowContext, UnescapedSymbolicNameStringContext, UnescapedSymbolicNameString_Context, WhereClauseContext } from "../generated-parser/CypherCmdParser";
+import CypherCmdParser, { ArrowLineContext, ClauseContext, EscapedSymbolicNameStringContext, ExistsExpressionContext, LabelExpressionContext, LeftArrowContext, MapContext, MergeActionContext, MergeClauseContext, OrderByContext, PropertyContext, ReturnItemsContext, RightArrowContext, UnescapedSymbolicNameStringContext, UnescapedSymbolicNameString_Context, WhereClauseContext } from "../generated-parser/CypherCmdParser";
 import CypherCmdParserVisitor from "../generated-parser/CypherCmdParserVisitor";
 import { lexerKeywords, lexerOperators } from "../lexerSymbols";
 
@@ -11,7 +11,14 @@ function wantsSpaces(node: TerminalNode): boolean {
 }
 
 function isKeywordTerminal(node: TerminalNode): boolean {
-  return lexerKeywords.includes(node.symbol.type) && !(node.parentCtx instanceof UnescapedSymbolicNameString_Context);
+  return lexerKeywords.includes(node.symbol.type) && !isSymbolicName(node);
+}
+
+// Variables or property names that have the same name as a keyword should not be
+// treated as keywords
+function isSymbolicName(node: TerminalNode): boolean {
+  return node.parentCtx instanceof UnescapedSymbolicNameString_Context
+    || node.parentCtx instanceof EscapedSymbolicNameStringContext;
 }
 
 export class TreePrintVisitor extends CypherCmdParserVisitor<string> {

@@ -116,6 +116,12 @@ RETURN a.prop /* Return the property of 'a' */`;
     expect(formatQuery(inlinemultiline)).toEqual(expected);
 
   });
+
+  test('escaped names', () => {
+    const query = 'CREATE (`complex name with special@chars`) RETURN `complex name with special@chars`';
+    const expected = 'CREATE (`complex name with special@chars`)\nRETURN `complex name with special@chars`';
+    expect(formatQuery(query)).toEqual(expected);
+  });
   //  test('variable names example', () => {
   //    const query = `CREATE (n:Label {prop: 0})
   //WITH n, rand() AS rand, $param AS map
