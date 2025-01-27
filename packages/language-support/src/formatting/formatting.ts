@@ -136,6 +136,8 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
     }
   };
 
+  // Handled separately because clauses should start on new lines, see
+  // https://neo4j.com/docs/cypher-manual/current/styleguide/#cypher-styleguide-indentation-and-line-breaks
   visitClause = (ctx: ClauseContext) => {
     this.breakLine();
     this.visitChildren(ctx);
@@ -155,6 +157,7 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
     this.visitTerminalRaw(ctx.LT());
   };
 
+  // Handled separately because count star is its own thing
   visitCountStar = (ctx: CountStarContext) => {
     this.visitTerminalRaw(ctx.COUNT());
     this.visit(ctx.LPAREN());
