@@ -1,6 +1,6 @@
 import { formatQuery } from '../formatting/../../formatting/formatting';
 
-describe('should format correctly', () => {
+describe('styleguide examples', () => {
   test('on match indentation example', () => {
     const query = `MERGE (n) ON CREATE SET n.prop = 0
 MERGE (a:A)-[:T]->(b:B)
@@ -58,7 +58,9 @@ RETURN length(p)`;
 RETURN map`;
     expect(formatQuery(query)).toEqual(expected);
   });
+});
 
+describe('should format correctly', () => {
   test('Test visitOrderBy', () => {
     const query = `RETURN user.id ORDER BY potential_reach, like_count;`;
     const expected = `RETURN user.id ORDER BY potential_reach, like_count;`;
@@ -81,7 +83,7 @@ MERGE (a:A)-[:T]->(b:B) // Create or match a relationship from 'a:A' to 'b:B'
   ON MATCH SET b.name = 'you' // If 'b' already exists, set its 'name' to 'you'
 RETURN a.prop // Return the 'prop' of 'a'`;
     expect(formatQuery(inlinecomments)).toEqual(expected);
-  })
+  });
 
   test('comments before the query', () => {
     const inlinecommentbefore = `// This is a comment before everything
@@ -107,7 +109,7 @@ RETURN n`;
 MERGE (a:A) /* Create or match 'a:A' */ 
   -[:T]-> (b:B) /* Link 'a' to 'b' */
 RETURN a.prop /* Return the property of 'a' */
-`
+`;
     const expected = `MERGE (n) /* Ensuring the node exists */
   ON CREATE SET n.prop = 0 /* Set default property */
 MERGE (a:A) /* Create or match 'a:A' */
@@ -134,11 +136,13 @@ MERGE (a:A)-[:T]->(b:B)
   ON MATCH SET b.name = 'you' /* Update name if matched */
 RETURN a.prop // Output the result`;
     expect(formatQuery(inlineandmultiline)).toEqual(expected);
-  })
+  });
 
   test('escaped names', () => {
-    const query = 'CREATE (`complex name with special@chars`) RETURN `complex name with special@chars`';
-    const expected = 'CREATE (`complex name with special@chars`)\nRETURN `complex name with special@chars`';
+    const query =
+      'CREATE (`complex name with special@chars`) RETURN `complex name with special@chars`';
+    const expected =
+      'CREATE (`complex name with special@chars`)\nRETURN `complex name with special@chars`';
     expect(formatQuery(query)).toEqual(expected);
   });
 
@@ -164,40 +168,40 @@ RETURN null, true, false`;
     // The first one is a symbolic name, the second one is a literal
     const expected3 = 'MATCH (INF)\nRETURN INF';
     expect(formatQuery(query3)).toEqual(expected3);
-  })
+  });
 
   test('puts one space between label/type predicates and property predicates in patterns', () => {
-    const query = `MATCH (p:Person{property:-1})-[:KNOWS{since: 2016}]->() RETURN p.name`
-    const expected = `MATCH (p:Person {property: -1})-[:KNOWS {since: 2016}]->()\nRETURN p.name`
+    const query = `MATCH (p:Person{property:-1})-[:KNOWS{since: 2016}]->() RETURN p.name`;
+    const expected = `MATCH (p:Person {property: -1})-[:KNOWS {since: 2016}]->()\nRETURN p.name`;
     expect(formatQuery(query)).toEqual(expected);
   });
 
   test('no space in patterns', () => {
-    const query = 'MATCH (:Person) --> (:Vehicle) RETURN count(*)'
-    const expected = 'MATCH (:Person)-->(:Vehicle)\nRETURN count(*)'
+    const query = 'MATCH (:Person) --> (:Vehicle) RETURN count(*)';
+    const expected = 'MATCH (:Person)-->(:Vehicle)\nRETURN count(*)';
     expect(formatQuery(query)).toEqual(expected);
   });
 
   test('space after each comma in lists and enumerations', () => {
     const query = `MATCH (),()
 WITH ['a','b',3.14] AS list
-RETURN list,2,3,4`
+RETURN list,2,3,4`;
     const expected = `MATCH (), ()
 WITH ['a', 'b', 3.14] AS list
-RETURN list, 2, 3, 4`
+RETURN list, 2, 3, 4`;
     expect(formatQuery(query)).toEqual(expected);
   });
 
   test('handles empty list literals', () => {
-    const query = `WITH [] AS emptyList RETURN emptyList`
+    const query = `WITH [] AS emptyList RETURN emptyList`;
     const expected = `WITH [] AS emptyList
-RETURN emptyList`
+RETURN emptyList`;
     expect(formatQuery(query)).toEqual(expected);
   });
 
   test('should not add space for negating minuses', () => {
-    const query = 'RETURN -1, -2, -3'
-    const expected = 'RETURN -1, -2, -3'
+    const query = 'RETURN -1, -2, -3';
+    const expected = 'RETURN -1, -2, -3';
     expect(formatQuery(query)).toEqual(expected);
   });
   //  test('variable names example', () => {
