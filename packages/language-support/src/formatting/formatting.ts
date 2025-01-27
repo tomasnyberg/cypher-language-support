@@ -24,8 +24,10 @@ import CypherCmdParser, {
 } from '../generated-parser/CypherCmdParser';
 import CypherCmdParserVisitor from '../generated-parser/CypherCmdParserVisitor';
 import {
-  wantsSpaceAfter, wantsSpaceBefore, wantsToBeUpperCase
-  , is_comment,
+  is_comment,
+  wantsSpaceAfter,
+  wantsSpaceBefore,
+  wantsToBeUpperCase,
 } from './formattingHelpers';
 
 interface RawTerminalOptions {
@@ -52,11 +54,15 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
   };
 
   addSpace = (multiple?: boolean) => {
-    if (!multiple && this.buffer.length > 0 && this.buffer[this.buffer.length - 1] === ' ') {
+    if (
+      !multiple &&
+      this.buffer.length > 0 &&
+      this.buffer[this.buffer.length - 1] === ' '
+    ) {
       return;
     }
     this.buffer.push(' ');
-  }
+  };
 
   addIndentation = () => this.indentation++;
 
@@ -66,11 +72,10 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
     const multiple = true;
     for (let i = 0; i < this.indentation; i++) {
       for (let j = 0; j < this.indentationSpaces; j++) {
-
         this.addSpace(multiple);
       }
     }
-  }
+  };
 
   // Comments are in the hidden channel, so grab them manually
   addCommentsBefore = (node: TerminalNode) => {
@@ -101,13 +106,12 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
         this.buffer[this.buffer.length - 1] !== ' ' &&
         this.buffer[this.buffer.length - 1] !== '\n'
       ) {
-        this.addSpace()
+        this.addSpace();
       }
       this.buffer.push(commentToken.text.trim());
       this.breakLine();
     }
   };
-
 
   visitClause = (ctx: ClauseContext) => {
     this.breakLine();
@@ -152,7 +156,7 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
     if (ctx.UNSIGNED_OCTAL_INTEGER()) {
       this.visit(ctx.UNSIGNED_OCTAL_INTEGER());
     }
-  }
+  };
 
   // Handled separately since otherwise they will get weird spacing
   // TODO: doesn't handle the special label expressions yet
@@ -184,7 +188,7 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
       this.buffer[this.buffer.length - 1] !== ' '
     ) {
       if (wantsSpaceBefore(node)) {
-        this.addSpace()
+        this.addSpace();
       }
     }
     if (node.symbol.type === CypherCmdLexer.EOF) {
@@ -196,7 +200,7 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
       this.buffer.push(node.getText());
     }
     if (wantsSpaceAfter(node)) {
-      this.addSpace()
+      this.addSpace();
     }
     this.addCommentsAfter(node);
   };
@@ -217,7 +221,7 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
     }
     this.buffer.push(result);
     this.addCommentsAfter(node);
-  }
+  };
 
   visitBooleanLiteral = (ctx: BooleanLiteralContext) => {
     if (ctx.TRUE()) {
@@ -248,7 +252,7 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
       this.visit(ctx.labelExpression());
     }
     if (ctx.labelExpression() && ctx.properties()) {
-      this.addSpace()
+      this.addSpace();
     }
     if (ctx.properties()) {
       this.visit(ctx.properties());
@@ -270,13 +274,13 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
       this.visit(ctx.leftArrow());
     }
     const arrowLineList = ctx.arrowLine_list();
-    this.visitTerminalRaw(arrowLineList[0].MINUS())
+    this.visitTerminalRaw(arrowLineList[0].MINUS());
     if (ctx.LBRACKET()) {
       this.visit(ctx.LBRACKET());
       this.handleInnerPatternContext(ctx);
       this.visit(ctx.RBRACKET());
     }
-    this.visitTerminalRaw(arrowLineList[1].MINUS())
+    this.visitTerminalRaw(arrowLineList[1].MINUS());
     if (ctx.rightArrow()) {
       this.visit(ctx.rightArrow());
     }
@@ -304,7 +308,7 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
       this.breakLine();
       this.removeIndentation();
     } else {
-      this.addSpace()
+      this.addSpace();
       if (ctx.matchMode()) {
         this.visit(ctx.matchMode());
       }
@@ -312,7 +316,7 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
       if (ctx.whereClause()) {
         this.visit(ctx.whereClause());
       }
-      this.addSpace()
+      this.addSpace();
     }
     this.visit(ctx.RCURLY());
   };
@@ -362,7 +366,7 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
     for (let i = 0; i < expressions.length; i++) {
       this.visit(propertyKeyNames[i]);
       this.visitTerminalRaw(colonList[i]);
-      this.addSpace()
+      this.addSpace();
       this.visit(expressions[i]);
       if (i < expressions.length - 1) {
         this.visit(commaList[i]);
