@@ -113,6 +113,18 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
     }
   };
 
+  visitIfNotNull = (ctx: any) => {
+    if (ctx) {
+      this.visit(ctx);
+    }
+  }
+
+  visitRawIfNotNull = (ctx: any, options?: RawTerminalOptions) => {
+    if (ctx) {
+      this.visitTerminalRaw(ctx, options);
+    }
+  }
+
   visitClause = (ctx: ClauseContext) => {
     this.breakLine();
     this.visitChildren(ctx);
@@ -141,33 +153,19 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
 
   // Handled separately to avoid spaces between a minus and a number
   visitNumberLiteral = (ctx: NumberLiteralContext) => {
-    if (ctx.MINUS()) {
-      this.visitTerminalRaw(ctx.MINUS());
-    }
-    if (ctx.DECIMAL_DOUBLE()) {
-      this.visit(ctx.DECIMAL_DOUBLE());
-    }
-    if (ctx.UNSIGNED_DECIMAL_INTEGER()) {
-      this.visit(ctx.UNSIGNED_DECIMAL_INTEGER());
-    }
-    if (ctx.UNSIGNED_HEX_INTEGER()) {
-      this.visit(ctx.UNSIGNED_HEX_INTEGER());
-    }
-    if (ctx.UNSIGNED_OCTAL_INTEGER()) {
-      this.visit(ctx.UNSIGNED_OCTAL_INTEGER());
-    }
+    this.visitRawIfNotNull(ctx.MINUS());
+    this.visitIfNotNull(ctx.DECIMAL_DOUBLE());
+    this.visitIfNotNull(ctx.UNSIGNED_DECIMAL_INTEGER());
+    this.visitIfNotNull(ctx.UNSIGNED_HEX_INTEGER());
+    this.visitIfNotNull(ctx.UNSIGNED_OCTAL_INTEGER());
   };
 
   // Handled separately since otherwise they will get weird spacing
   // TODO: doesn't handle the special label expressions yet
   // (labelExpression3 etc)
   visitLabelExpression = (ctx: LabelExpressionContext) => {
-    if (ctx.COLON()) {
-      this.visitTerminalRaw(ctx.COLON());
-    }
-    if (ctx.IS()) {
-      this.visitTerminalRaw(ctx.IS());
-    }
+    this.visitRawIfNotNull(ctx.COLON());
+    this.visitRawIfNotNull(ctx.IS());
     this.visit(ctx.labelExpression4());
   };
 
@@ -224,12 +222,8 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
   };
 
   visitBooleanLiteral = (ctx: BooleanLiteralContext) => {
-    if (ctx.TRUE()) {
-      this.visitTerminalRaw(ctx.TRUE(), { lowerCase: true });
-    }
-    if (ctx.FALSE()) {
-      this.visitTerminalRaw(ctx.FALSE(), { lowerCase: true });
-    }
+    this.visitRawIfNotNull(ctx.TRUE(), { lowerCase: true });
+    this.visitRawIfNotNull(ctx.FALSE(), { lowerCase: true });
   };
 
   visitKeywordLiteral = (ctx: KeywordLiteralContext) => {
@@ -245,18 +239,12 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
   handleInnerPatternContext = (
     ctx: NodePatternContext | RelationshipPatternContext,
   ) => {
-    if (ctx.variable()) {
-      this.visit(ctx.variable());
-    }
-    if (ctx.labelExpression()) {
-      this.visit(ctx.labelExpression());
-    }
+    this.visitIfNotNull(ctx.variable());
+    this.visitIfNotNull(ctx.labelExpression());
     if (ctx.labelExpression() && ctx.properties()) {
       this.addSpace();
     }
-    if (ctx.properties()) {
-      this.visit(ctx.properties());
-    }
+    this.visitIfNotNull(ctx.properties());
     if (ctx.WHERE()) {
       this.visit(ctx.WHERE());
       this.visit(ctx.expression());
@@ -270,9 +258,7 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
   };
 
   visitRelationshipPattern = (ctx: RelationshipPatternContext) => {
-    if (ctx.leftArrow()) {
-      this.visit(ctx.leftArrow());
-    }
+    this.visitIfNotNull(ctx.leftArrow());
     const arrowLineList = ctx.arrowLine_list();
     this.visitTerminalRaw(arrowLineList[0].MINUS());
     if (ctx.LBRACKET()) {
@@ -281,9 +267,7 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
       this.visit(ctx.RBRACKET());
     }
     this.visitTerminalRaw(arrowLineList[1].MINUS());
-    if (ctx.rightArrow()) {
-      this.visit(ctx.rightArrow());
-    }
+    this.visitIfNotNull(ctx.rightArrow());
   };
 
   // Handled separately because the dot is not an operator
@@ -309,13 +293,9 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
       this.removeIndentation();
     } else {
       this.addSpace();
-      if (ctx.matchMode()) {
-        this.visit(ctx.matchMode());
-      }
+      this.visitIfNotNull(ctx.matchMode());
       this.visit(ctx.patternList());
-      if (ctx.whereClause()) {
-        this.visit(ctx.whereClause());
-      }
+      this.visitIfNotNull(ctx.whereClause());
       this.addSpace();
     }
     this.visit(ctx.RCURLY());
