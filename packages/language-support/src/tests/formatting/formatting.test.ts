@@ -194,6 +194,12 @@ RETURN list, 2, 3, 4`
 RETURN emptyList`
     expect(formatQuery(query)).toEqual(expected);
   });
+
+  test('should not add space for negating minuses', () => {
+    const query = 'RETURN -1, -2, -3'
+    const expected = 'RETURN -1, -2, -3'
+    expect(formatQuery(query)).toEqual(expected);
+  });
   //  test('variable names example', () => {
   //    const query = `CREATE (n:Label {prop: 0})
   //WITH n, rand() AS rand, $param AS map

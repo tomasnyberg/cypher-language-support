@@ -16,6 +16,7 @@ import CypherCmdParser, {
   MergeActionContext,
   MergeClauseContext,
   NodePatternContext,
+  NumberLiteralContext,
   PropertyContext,
   RelationshipPatternContext,
   RightArrowContext,
@@ -111,6 +112,25 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
     this.visitTerminalRaw(ctx.TIMES());
     this.visit(ctx.RPAREN());
   };
+
+  // Handled separately to avoid spaces between a minus and a number
+  visitNumberLiteral = (ctx: NumberLiteralContext) => {
+    if (ctx.MINUS()) {
+      this.visitTerminalRaw(ctx.MINUS());
+    }
+    if (ctx.DECIMAL_DOUBLE()) {
+      this.visit(ctx.DECIMAL_DOUBLE());
+    }
+    if (ctx.UNSIGNED_DECIMAL_INTEGER()) {
+      this.visit(ctx.UNSIGNED_DECIMAL_INTEGER());
+    }
+    if (ctx.UNSIGNED_HEX_INTEGER()) {
+      this.visit(ctx.UNSIGNED_HEX_INTEGER());
+    }
+    if (ctx.UNSIGNED_OCTAL_INTEGER()) {
+      this.visit(ctx.UNSIGNED_OCTAL_INTEGER());
+    }
+  }
 
   // Handled separately since otherwise they will get weird spacing
   // TODO: doesn't handle the special label expressions yet
@@ -314,8 +334,7 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
       this.visit(propertyKeyNames[i]);
       this.visitTerminalRaw(colonList[i]);
       this.buffer.push(' ');
-      // TODO minuses are bad
-      this.buffer.push(expressions[i].getText());
+      this.visit(expressions[i]);
       if (i < expressions.length - 1) {
         this.visit(commaList[i]);
       }
