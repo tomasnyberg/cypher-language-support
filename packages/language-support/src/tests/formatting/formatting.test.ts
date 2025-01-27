@@ -60,13 +60,7 @@ RETURN map`;
   });
 });
 
-describe('should format correctly', () => {
-  test('Test visitOrderBy', () => {
-    const query = `RETURN user.id ORDER BY potential_reach, like_count;`;
-    const expected = `RETURN user.id ORDER BY potential_reach, like_count;`;
-    expect(formatQuery(query)).toEqual(expected);
-  });
-
+describe('should not forget to include all comments', () => {
   test('basic inline comments', () => {
     // Whitespace after the comment lines is intentional. It shuold be removed
     const inlinecomments = `
@@ -137,6 +131,14 @@ MERGE (a:A)-[:T]->(b:B)
 RETURN a.prop // Output the result`;
     expect(formatQuery(inlineandmultiline)).toEqual(expected);
   });
+});
+
+describe('other styleguide recommendations', () => {
+  test('order by', () => {
+    const query = `RETURN user.id ORDER BY potential_reach, like_count;`;
+    const expected = `RETURN user.id ORDER BY potential_reach, like_count;`;
+    expect(formatQuery(query)).toEqual(expected);
+  });
 
   test('escaped names', () => {
     const query =
@@ -204,14 +206,4 @@ RETURN emptyList`;
     const expected = 'RETURN -1, -2, -3';
     expect(formatQuery(query)).toEqual(expected);
   });
-  //  test('variable names example', () => {
-  //    const query = `CREATE (n:Label {prop: 0})
-  //WITH n, rand() AS rand, $param AS map
-  //RETURN rand, map.propertyKey, count(n)`;
-  //    const expected = `CREATE (n:Label {prop: 0})
-  //WITH n, rand() AS rand, $param AS map
-  //RETURN rand, map.propertyKey, count(n)`
-  //    expect(formatQuery(query)).toEqual(expected);
-  //
-  //  });
 });
