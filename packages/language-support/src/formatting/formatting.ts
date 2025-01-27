@@ -36,6 +36,7 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
     super();
   }
 
+  // Comments are in the hidden channel, so grab them manually
   addCommentsBefore = (node: TerminalNode) => {
     const token = node.symbol;
     const hiddenTokens = this.tokenStream.getHiddenTokensToLeft(
@@ -80,7 +81,6 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
     }
   };
 
-  // Handled separately because clauses shuold have newlines
   visitClause = (ctx: ClauseContext) => {
     this.breakLine();
     this.visitChildren(ctx);
@@ -88,10 +88,11 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
 
   // Visit these separately because operators want spaces around them,
   // and these are not operators (despite being minuses).
-  visitArrowLine = (_ctx: ArrowLineContext) => {
-    this.buffer.push('-');
+  visitArrowLine = (ctx: ArrowLineContext) => {
+    this.visitTerminalRaw(ctx.ARROW_LINE());
   };
 
+  // TODO these don't want to visit raw for some reason
   visitRightArrow = (_ctx: RightArrowContext) => {
     this.buffer.push('>');
   };
@@ -110,10 +111,10 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
   // Handled separately since otherwise they will get weird spacing
   visitLabelExpression = (ctx: LabelExpressionContext) => {
     if (ctx.COLON()) {
-      this.buffer.push(':');
+      this.visitTerminalRaw(ctx.COLON());
     }
     if (ctx.IS()) {
-      this.buffer.push('IS');
+      this.visitTerminalRaw(ctx.IS());
     }
     this.visit(ctx.labelExpression4());
   };
@@ -154,6 +155,17 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
     }
     this.addCommentsAfter(node);
   };
+
+  // Some terminals don't want to have the regular rules applied to them,
+  // for instance the . in properties should be handled in a "raw" manner to
+  // avoid getting spaces around it (since it is an operator and operators want spaces)
+  visitTerminalRaw = (node: TerminalNode) => {
+    if (this.buffer.length === 0) {
+      this.addCommentsBefore(node);
+    }
+    this.buffer.push(node.getText());
+    this.addCommentsAfter(node);
+  }
 
   visitBooleanLiteral = (ctx: BooleanLiteralContext) => {
     this.buffer.push(ctx.getText().toLowerCase());
