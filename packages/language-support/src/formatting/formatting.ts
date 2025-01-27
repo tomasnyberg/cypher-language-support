@@ -304,20 +304,23 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
   // Map has its own formatting rules, see:
   // https://neo4j.com/docs/cypher-manual/current/styleguide/#cypher-styleguide-spacing
   visitMap = (ctx: MapContext) => {
-    this.buffer.push('{');
+    this.visit(ctx.LCURLY());
 
     const propertyKeyNames = ctx.propertyKeyName_list();
     const expressions = ctx.expression_list();
     const commaList = ctx.COMMA_list();
+    const colonList = ctx.COLON_list();
     for (let i = 0; i < expressions.length; i++) {
-      this.buffer.push(propertyKeyNames[i].getText());
-      this.buffer.push(': ');
+      this.visit(propertyKeyNames[i]);
+      this.visitTerminalRaw(colonList[i]);
+      this.buffer.push(' ');
+      // TODO minuses are bad
       this.buffer.push(expressions[i].getText());
       if (i < expressions.length - 1) {
         this.visit(commaList[i]);
       }
     }
-    this.buffer.push('}');
+    this.visit(ctx.RCURLY());
   };
 }
 
