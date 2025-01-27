@@ -1,23 +1,45 @@
-import { CharStreams, CommonTokenStream, TerminalNode } from "antlr4";
-import CypherCmdLexer from "../generated-parser/CypherCmdLexer";
-import CypherLexer from "../generated-parser/CypherCmdLexer";
-import CypherCmdParser, { ArrowLineContext, BooleanLiteralContext, ClauseContext, CountStarContext, EscapedSymbolicNameStringContext, ExistsExpressionContext, KeywordLiteralContext, LabelExpressionContext, LeftArrowContext, MapContext, MergeActionContext, MergeClauseContext, NodePatternContext, PropertyContext, RelationshipPatternContext, RightArrowContext, UnescapedSymbolicNameString_Context, WhereClauseContext } from "../generated-parser/CypherCmdParser";
-import CypherCmdParserVisitor from "../generated-parser/CypherCmdParserVisitor";
-import { lexerKeywords, lexerOperators } from "../lexerSymbols";
-import { Token } from "antlr4";
+import { CharStreams, CommonTokenStream, TerminalNode, Token } from 'antlr4';
+import {
+  default as CypherCmdLexer,
+  default as CypherLexer,
+} from '../generated-parser/CypherCmdLexer';
+import CypherCmdParser, {
+  ArrowLineContext,
+  BooleanLiteralContext,
+  ClauseContext,
+  CountStarContext,
+  EscapedSymbolicNameStringContext,
+  ExistsExpressionContext,
+  KeywordLiteralContext,
+  LabelExpressionContext,
+  LeftArrowContext,
+  MapContext,
+  MergeActionContext,
+  MergeClauseContext,
+  NodePatternContext,
+  PropertyContext,
+  RelationshipPatternContext,
+  RightArrowContext,
+  UnescapedSymbolicNameString_Context,
+  WhereClauseContext,
+} from '../generated-parser/CypherCmdParser';
+import CypherCmdParserVisitor from '../generated-parser/CypherCmdParserVisitor';
+import { lexerKeywords, lexerOperators } from '../lexerSymbols';
 
 function wantsToBeUpperCase(node: TerminalNode): boolean {
   return isKeywordTerminal(node);
 }
 
 function wantsSpaceBefore(node: TerminalNode): boolean {
-  return isKeywordTerminal(node) ||
-    lexerOperators.includes(node.symbol.type);
+  return isKeywordTerminal(node) || lexerOperators.includes(node.symbol.type);
 }
 
 function wantsSpaceAfter(node: TerminalNode): boolean {
-  return isKeywordTerminal(node) ||
-    lexerOperators.includes(node.symbol.type) || node.symbol.type === CypherCmdLexer.COMMA;
+  return (
+    isKeywordTerminal(node) ||
+    lexerOperators.includes(node.symbol.type) ||
+    node.symbol.type === CypherCmdLexer.COMMA
+  );
 }
 
 function isKeywordTerminal(node: TerminalNode): boolean {
@@ -25,20 +47,24 @@ function isKeywordTerminal(node: TerminalNode): boolean {
 }
 
 function is_comment(token: Token) {
-  return token.type === CypherCmdLexer.MULTI_LINE_COMMENT
-    || token.type === CypherCmdLexer.SINGLE_LINE_COMMENT;
+  return (
+    token.type === CypherCmdLexer.MULTI_LINE_COMMENT ||
+    token.type === CypherCmdLexer.SINGLE_LINE_COMMENT
+  );
 }
 
 // Variables or property names that have the same name as a keyword should not be
 // treated as keywords
 function isSymbolicName(node: TerminalNode): boolean {
-  return node.parentCtx instanceof UnescapedSymbolicNameString_Context
-    || node.parentCtx instanceof EscapedSymbolicNameStringContext;
+  return (
+    node.parentCtx instanceof UnescapedSymbolicNameString_Context ||
+    node.parentCtx instanceof EscapedSymbolicNameStringContext
+  );
 }
 
 export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
   buffer: string[] = [];
-  indentation = 0
+  indentation = 0;
 
   constructor(private tokenStream: CommonTokenStream) {
     super();
@@ -46,58 +72,71 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
 
   addCommentsBefore = (node: TerminalNode) => {
     const token = node.symbol;
-    const hiddenTokens = this.tokenStream.getHiddenTokensToLeft(token.tokenIndex);
-    const commentTokens = (hiddenTokens || []).filter((token) => is_comment(token));
+    const hiddenTokens = this.tokenStream.getHiddenTokensToLeft(
+      token.tokenIndex,
+    );
+    const commentTokens = (hiddenTokens || []).filter((token) =>
+      is_comment(token),
+    );
     for (const commentToken of commentTokens) {
       this.buffer.push(commentToken.text.trim());
       this.buffer.push('\n');
     }
-  }
+  };
 
   addCommentsAfter = (node: TerminalNode) => {
     const token = node.symbol;
-    const hiddenTokens = this.tokenStream.getHiddenTokensToRight(token.tokenIndex);
-    const commentTokens = (hiddenTokens || []).filter((token) => is_comment(token));
+    const hiddenTokens = this.tokenStream.getHiddenTokensToRight(
+      token.tokenIndex,
+    );
+    const commentTokens = (hiddenTokens || []).filter((token) =>
+      is_comment(token),
+    );
     for (const commentToken of commentTokens) {
-      if (this.buffer.length > 0 && this.buffer[this.buffer.length - 1] !== ' ' &&
-        this.buffer[this.buffer.length - 1] !== '\n') {
+      if (
+        this.buffer.length > 0 &&
+        this.buffer[this.buffer.length - 1] !== ' ' &&
+        this.buffer[this.buffer.length - 1] !== '\n'
+      ) {
         this.buffer.push(' ');
       }
       this.buffer.push(commentToken.text.trim());
       this.breakLine();
     }
-  }
+  };
 
   breakLine = () => {
-    if (this.buffer.length > 0 && this.buffer[this.buffer.length - 1] !== '\n') {
+    if (
+      this.buffer.length > 0 &&
+      this.buffer[this.buffer.length - 1] !== '\n'
+    ) {
       this.buffer.push('\n');
     }
-  }
-
+  };
 
   // Handled separately because clauses shuold have newlines
   visitClause = (ctx: ClauseContext): string => {
     this.breakLine();
     this.visitChildren(ctx);
     return ctx.getText();
-  }
+  };
 
-  // Visit these separately because operators want spaces around them, 
+  // Visit these separately because operators want spaces around them,
   // and these are not operators (despite being minuses).
   visitArrowLine = (ctx: ArrowLineContext): string => {
     this.buffer.push('-');
     return ctx.getText();
-  }
+  };
 
   visitRightArrow = (ctx: RightArrowContext): string => {
     this.buffer.push('>');
     return ctx.getText();
-  }
+  };
 
   visitLeftArrow = (ctx: LeftArrowContext): string => {
     this.buffer.push('<');
     return ctx.getText();
-  }
+  };
 
   visitCountStar = (ctx: CountStarContext): string => {
     this.buffer.push(ctx.COUNT().getText());
@@ -105,7 +144,7 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
     this.buffer.push('*');
     this.visit(ctx.RPAREN());
     return ctx.getText();
-  }
+  };
 
   // Handled separately since otherwise they will get weird spacing
   visitLabelExpression = (ctx: LabelExpressionContext): string => {
@@ -117,21 +156,27 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
     }
     this.visit(ctx.labelExpression4());
     return ctx.getText();
-  }
+  };
 
   visitTerminal = (node: TerminalNode): string => {
     if (this.buffer.length === 0) {
       this.addCommentsBefore(node);
     }
-    if (this.buffer.length > 0 && this.buffer[this.buffer.length - 1] === '\n') {
+    if (
+      this.buffer.length > 0 &&
+      this.buffer[this.buffer.length - 1] === '\n'
+    ) {
       for (let i = 0; i < this.indentation; i++) {
-        this.buffer.push(" ")
-        this.buffer.push(" ")
+        this.buffer.push(' ');
+        this.buffer.push(' ');
       }
     }
 
-    if (this.buffer.length > 0 && this.buffer[this.buffer.length - 1] !== '\n'
-      && this.buffer[this.buffer.length - 1] !== ' ') {
+    if (
+      this.buffer.length > 0 &&
+      this.buffer[this.buffer.length - 1] !== '\n' &&
+      this.buffer[this.buffer.length - 1] !== ' '
+    ) {
       if (wantsSpaceBefore(node)) {
         this.buffer.push(' ');
       }
@@ -149,27 +194,29 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
     }
     this.addCommentsAfter(node);
     return node.getText();
-  }
+  };
 
   visitBooleanLiteral = (ctx: BooleanLiteralContext): string => {
     this.buffer.push(ctx.getText().toLowerCase());
     return ctx.getText();
-  }
+  };
 
   visitKeywordLiteral = (ctx: KeywordLiteralContext): string => {
     if (ctx.NULL()) {
       this.buffer.push(ctx.getText().toLowerCase());
     } else if (ctx.NAN()) {
-      this.buffer.push("NaN");
+      this.buffer.push('NaN');
     } else {
       this.buffer.push(ctx.getText());
     }
     return ctx.getText();
-  }
+  };
 
-  // The patterns are handled separately because we need spaces 
+  // The patterns are handled separately because we need spaces
   // between labels and property predicates in patterns
-  handleInnerPatternContext = (ctx: NodePatternContext | RelationshipPatternContext) => {
+  handleInnerPatternContext = (
+    ctx: NodePatternContext | RelationshipPatternContext,
+  ) => {
     if (ctx.variable()) {
       this.visit(ctx.variable());
     }
@@ -186,14 +233,14 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
       this.visit(ctx.WHERE());
       this.visit(ctx.expression());
     }
-  }
+  };
 
   visitNodePattern = (ctx: NodePatternContext): string => {
     this.visit(ctx.LPAREN());
     this.handleInnerPatternContext(ctx);
     this.visit(ctx.RPAREN());
     return ctx.getText();
-  }
+  };
 
   visitRelationshipPattern = (ctx: RelationshipPatternContext): string => {
     if (ctx.leftArrow()) {
@@ -212,44 +259,43 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
       this.visit(ctx.rightArrow());
     }
     return ctx.getText();
-  }
+  };
 
   // Handled separately because the dot is not an operator
   visitProperty = (ctx: PropertyContext): string => {
     this.buffer.push('.');
     this.visit(ctx.propertyKeyName());
     return ctx.getText();
-  }
+  };
 
   // Handled separately because where is not a clause (it is a subclause)
   visitWhereClause = (ctx: WhereClauseContext): string => {
     this.breakLine();
     return this.visitChildren(ctx);
-  }
+  };
 
   // Handled separately because it contains subclauses (and thus indentation rules)
   visitExistsExpression = (ctx: ExistsExpressionContext): string => {
-    this.buffer.push("EXISTS")
-    this.buffer.push(" {")
+    this.buffer.push('EXISTS');
+    this.buffer.push(' {');
     if (ctx.regularQuery()) {
       this.indentation++;
-      this.visit(ctx.regularQuery())
-      this.buffer.push("\n")
+      this.visit(ctx.regularQuery());
+      this.buffer.push('\n');
       this.indentation--;
     } else {
-      this.buffer.push(" ")
+      this.buffer.push(' ');
       if (ctx.matchMode()) {
-        this.visit(ctx.matchMode())
+        this.visit(ctx.matchMode());
       }
-      this.visit(ctx.patternList())
+      this.visit(ctx.patternList());
       if (ctx.whereClause()) {
-        this.visit(ctx.whereClause())
+        this.visit(ctx.whereClause());
       }
-      this.buffer.push(" ")
-
+      this.buffer.push(' ');
     }
-    this.buffer.push("}")
-    return ""
+    this.buffer.push('}');
+    return '';
   };
 
   // Handled separately because we want ON CREATE bedfore ON MATCH
@@ -257,7 +303,8 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
     this.visit(ctx.MERGE());
     this.visit(ctx.pattern());
     // ON CREATE should come before ON MATCH
-    const mergeActions = ctx.mergeAction_list()
+    const mergeActions = ctx
+      .mergeAction_list()
       .map((action, index) => ({ action, index }))
       .sort((a, b) => {
         if (a.action.CREATE() && b.action.MATCH()) {
@@ -272,39 +319,39 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
       this.visit(action);
     });
     return ctx.getText();
-  }
+  };
 
   // Handled separately because it wants indentation
   // https://neo4j.com/docs/cypher-manual/current/styleguide/#cypher-styleguide-indentation-and-line-breaks
   visitMergeAction = (ctx: MergeActionContext): string => {
     if (this.buffer.length > 0) {
       this.breakLine();
-      this.buffer.push(' ')
-      this.buffer.push(' ')
+      this.buffer.push(' ');
+      this.buffer.push(' ');
     }
     this.visitChildren(ctx);
     return ctx.getText();
-  }
+  };
 
   // Map has its formatting rules, see:
   // https://neo4j.com/docs/cypher-manual/current/styleguide/#cypher-styleguide-spacing
   visitMap = (ctx: MapContext): string => {
-    this.buffer.push("{")
+    this.buffer.push('{');
 
     const propertyKeyNames = ctx.propertyKeyName_list();
     const expressions = ctx.expression_list();
     const commaList = ctx.COMMA_list();
     for (let i = 0; i < expressions.length; i++) {
-      this.buffer.push(propertyKeyNames[i].getText())
-      this.buffer.push(": ")
+      this.buffer.push(propertyKeyNames[i].getText());
+      this.buffer.push(': ');
       this.buffer.push(expressions[i].getText());
       if (i < expressions.length - 1) {
         this.visit(commaList[i]);
       }
     }
-    this.buffer.push("}")
-    return ""
-  }
+    this.buffer.push('}');
+    return '';
+  };
 }
 
 export function formatQuery(query: string) {
@@ -312,11 +359,10 @@ export function formatQuery(query: string) {
   const lexer = new CypherLexer(inputStream);
   const tokens = new CommonTokenStream(lexer);
   const parser = new CypherCmdParser(tokens);
-  parser.buildParseTrees = true
-  const tree = parser.statementsOrCommands()
+  parser.buildParseTrees = true;
+  const tree = parser.statementsOrCommands();
   const visitor = new TreePrintVisitor(tokens);
   visitor.visit(tree);
-  console.log(visitor.buffer.join(''))
+  console.log(visitor.buffer.join(''));
   return visitor.buffer.join('').trim();
 }
-
