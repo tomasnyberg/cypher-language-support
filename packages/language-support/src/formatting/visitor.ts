@@ -10,9 +10,14 @@ function wantsToBeUpperCase(node: TerminalNode): boolean {
   return isKeywordTerminal(node);
 }
 
-function wantsSpaces(node: TerminalNode): boolean {
+function wantsSpaceBefore(node: TerminalNode): boolean {
   return isKeywordTerminal(node) ||
     lexerOperators.includes(node.symbol.type);
+}
+
+function wantsSpaceAfter(node: TerminalNode): boolean {
+  return isKeywordTerminal(node) ||
+    lexerOperators.includes(node.symbol.type) || node.symbol.type === CypherCmdLexer.COMMA;
 }
 
 function isKeywordTerminal(node: TerminalNode): boolean {
@@ -127,7 +132,7 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
 
     if (this.buffer.length > 0 && this.buffer[this.buffer.length - 1] !== '\n'
       && this.buffer[this.buffer.length - 1] !== ' ') {
-      if (wantsSpaces(node)) {
+      if (wantsSpaceBefore(node)) {
         this.buffer.push(' ');
       }
     }
@@ -139,60 +144,11 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
     } else {
       this.buffer.push(node.getText());
     }
-    if (wantsSpaces(node)) {
+    if (wantsSpaceAfter(node)) {
       this.buffer.push(' ');
     }
     this.addCommentsAfter(node);
     return node.getText();
-  }
-
-  // Handled separately because we want spaces between the commas
-  visitReturnItems = (ctx: ReturnItemsContext): string => {
-    ctx.returnItem_list().forEach((item, idx) => {
-      this.visit(item);
-      if (idx < ctx.returnItem_list().length - 1) {
-        this.buffer.push(',');
-        this.buffer.push(' ');
-      }
-    });
-    return ctx.getText();
-  }
-
-  visitPatternList = (ctx: PatternListContext): string => {
-    ctx.pattern_list().forEach((pattern, idx) => {
-      this.visit(pattern);
-      if (idx < ctx.pattern_list().length - 1) {
-        this.buffer.push(',');
-        this.buffer.push(' ');
-      }
-    });
-    return ctx.getText();
-  }
-
-  visitListLiteral = (ctx: ListLiteralContext): string => {
-    this.visit(ctx.LBRACKET());
-    ctx.expression_list().forEach((expression, idx) => {
-      this.visit(expression);
-      if (idx < ctx.expression_list().length - 1) {
-        this.buffer.push(',');
-        this.buffer.push(' ');
-      }
-    });
-    this.visit(ctx.RBRACKET());
-    return ctx.getText();
-  }
-
-  visitOrderBy = (ctx: OrderByContext): string => {
-    this.visit(ctx.ORDER())
-    this.visit(ctx.BY())
-    ctx.orderItem_list().forEach((item, idx) => {
-      this.visit(item);
-      if (idx < ctx.orderItem_list().length - 1) {
-        this.buffer.push(',');
-        this.buffer.push(' ');
-      }
-    });
-    return ctx.getText();
   }
 
   visitBooleanLiteral = (ctx: BooleanLiteralContext): string => {
@@ -337,12 +293,13 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
 
     const propertyKeyNames = ctx.propertyKeyName_list();
     const expressions = ctx.expression_list();
+    const commaList = ctx.COMMA_list();
     for (let i = 0; i < expressions.length; i++) {
       this.buffer.push(propertyKeyNames[i].getText())
       this.buffer.push(": ")
       this.buffer.push(expressions[i].getText());
-      if (i != expressions.length - 1) {
-        this.buffer.push(", ")
+      if (i < expressions.length - 1) {
+        this.visit(commaList[i]);
       }
     }
     this.buffer.push("}")
