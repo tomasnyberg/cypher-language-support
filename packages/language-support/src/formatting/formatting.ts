@@ -249,11 +249,10 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
     this.buffer.push('}');
   };
 
-  // Handled separately because we want ON CREATE bedfore ON MATCH
+  // Handled separately because we want ON CREATE before ON MATCH
   visitMergeClause = (ctx: MergeClauseContext) => {
     this.visit(ctx.MERGE());
     this.visit(ctx.pattern());
-    // ON CREATE should come before ON MATCH
     const mergeActions = ctx
       .mergeAction_list()
       .map((action, index) => ({ action, index }))
@@ -282,7 +281,7 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
     this.visitChildren(ctx);
   };
 
-  // Map has its formatting rules, see:
+  // Map has its own formatting rules, see:
   // https://neo4j.com/docs/cypher-manual/current/styleguide/#cypher-styleguide-spacing
   visitMap = (ctx: MapContext) => {
     this.buffer.push('{');
