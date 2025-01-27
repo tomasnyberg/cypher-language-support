@@ -109,6 +109,8 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
   };
 
   // Handled separately since otherwise they will get weird spacing
+  // TODO: doesn't handle the special label expressions yet
+  // (labelExpression3 etc)
   visitLabelExpression = (ctx: LabelExpressionContext) => {
     if (ctx.COLON()) {
       this.visitTerminalRaw(ctx.COLON());
