@@ -405,25 +405,29 @@ export function formatQuery(query: string, cursorPosition?: number): FormattingR
   const parser = new CypherCmdParser(tokens);
   parser.buildParseTrees = true;
   const tree = parser.statementsOrCommands();
+  const visitor = new TreePrintVisitor(tokens);
   
   if (!cursorPosition) {
-    const visitor = new TreePrintVisitor(tokens);
     const result = visitor.format(tree);
     return result;
   }
 
   if (query.length === cursorPosition) {
-    const visitor = new TreePrintVisitor(tokens);
     const result = visitor.format(tree);
     return {
       formattedString: result,
       newCursorPos: result.length
     }
   }
+
   let currentPos = cursorPosition;
   let backOfLine = 0
   // If cursor is at space
   
+if (query.at(currentPos - 1) !== ' ' && query.at(currentPos - 1) !== '\n') {
+  currentPos--;
+  backOfLine = 1;
+} else {
   while (query.at(currentPos) === ' ') {
     currentPos++;
   }
@@ -432,6 +436,8 @@ export function formatQuery(query: string, cursorPosition?: number): FormattingR
     currentPos--;
     backOfLine = 1;
   }
+}
+
   
   const targetToken = tokens.tokens.find(token => {
     const start = token.start;
@@ -440,7 +446,6 @@ export function formatQuery(query: string, cursorPosition?: number): FormattingR
   });
   const relativePosition = currentPos - targetToken.start
   
-  const visitor = new TreePrintVisitor(tokens);
   visitor.setTargetToken(targetToken.tokenIndex)
   const result = visitor.format(tree);
   return {
