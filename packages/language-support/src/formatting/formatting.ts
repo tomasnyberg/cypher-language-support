@@ -45,9 +45,12 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
   buffer: string[] = [];
   indentation = 0;
   indentationSpaces = 2;
+  targetToken = -1;
+  cursorPos = -1;
 
-  constructor(private tokenStream: CommonTokenStream) {
+  constructor(private tokenStream: CommonTokenStream, targetToken: number) {
     super();
+    this.targetToken = targetToken;
   }
 
   format = (root: StatementsOrCommandsContext) => {
@@ -195,14 +198,20 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
         this.addSpace();
       }
     }
+    
     if (node.symbol.type === CypherCmdLexer.EOF) {
       return;
+    }
+    if(node.symbol.tokenIndex === this.targetToken) {
+      this.cursorPos = this.buffer.join('').length;
+      console.log("found: ", node.getText())
     }
     if (wantsToBeUpperCase(node)) {
       this.buffer.push(node.getText().toUpperCase());
     } else {
       this.buffer.push(node.getText());
     }
+    
     if (wantsSpaceAfter(node)) {
       this.addSpace();
     }
@@ -227,7 +236,12 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
     if (options?.upperCase) {
       result = result.toUpperCase();
     }
+    if(node.symbol.tokenIndex === this.targetToken) {
+      this.cursorPos = this.buffer.join('').length;
+      console.log("found: ", node.getText())
+    }
     this.buffer.push(result);
+   
     this.addCommentsAfter(node);
   };
 
@@ -368,13 +382,39 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
   };
 }
 
-export function formatQuery(query: string) {
+interface FormattingResult {
+  formattedString: string;
+  newCursorPos: number;
+}
+export function formatQuery(query: string, cursorPosition?: number): FormattingResult {
+  const currentPosIsSpace = query.at(cursorPosition) === ' '
+  if (currentPosIsSpace) {
+    cursorPosition--;
+  }
+
   const inputStream = CharStreams.fromString(query);
   const lexer = new CypherLexer(inputStream);
   const tokens = new CommonTokenStream(lexer);
+
+  const inputStream1 = CharStreams.fromString(query);
+  const lexer1 = new CypherLexer(inputStream1);
+  const tokens1 = new CommonTokenStream(lexer1);
+  tokens1.fill()
+  const targetToken = tokens1.tokens.find(token => {
+    const start = token.start;
+    const stop = token.stop;
+    return cursorPosition >= start && cursorPosition <= stop;
+  });
+  const relativePosition = cursorPosition - targetToken.start
+
   const parser = new CypherCmdParser(tokens);
   parser.buildParseTrees = true;
   const tree = parser.statementsOrCommands();
-  const visitor = new TreePrintVisitor(tokens);
-  return visitor.format(tree);
+  const visitor = new TreePrintVisitor(tokens, targetToken.tokenIndex);
+  const result = visitor.format(tree);
+  
+  return {
+    formattedString: result,
+    newCursorPos: (visitor.cursorPos + relativePosition) + (currentPosIsSpace ? 1 : 0)
+  };
 }
