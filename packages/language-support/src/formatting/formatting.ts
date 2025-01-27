@@ -28,6 +28,10 @@ import {
   , is_comment,
 } from './formattingHelpers';
 
+interface RawTerminalOptions {
+  lowerCase?: boolean;
+  upperCase?: boolean;
+}
 
 export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
   buffer: string[] = [];
@@ -185,24 +189,33 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
   // Some terminals don't want to have the regular rules applied to them,
   // for instance the . in properties should be handled in a "raw" manner to
   // avoid getting spaces around it (since it is an operator and operators want spaces)
-  visitTerminalRaw = (node: TerminalNode) => {
+  visitTerminalRaw = (node: TerminalNode, options?: RawTerminalOptions) => {
     if (this.buffer.length === 0) {
       this.addCommentsBefore(node);
     }
-    this.buffer.push(node.getText());
+    let result = node.getText();
+    if (options?.lowerCase) {
+      result = result.toLowerCase();
+    }
+    if (options?.upperCase) {
+      result = result.toUpperCase();
+    }
+    this.buffer.push(result);
     this.addCommentsAfter(node);
   }
 
-  // TODO add options to visit raw or smth so that we can get it lowercased
   visitBooleanLiteral = (ctx: BooleanLiteralContext) => {
-    this.buffer.push(ctx.getText().toLowerCase());
+    if (ctx.TRUE()) {
+      this.visitTerminalRaw(ctx.TRUE(), { lowerCase: true });
+    }
+    if (ctx.FALSE()) {
+      this.visitTerminalRaw(ctx.FALSE(), { lowerCase: true });
+    }
   };
 
   visitKeywordLiteral = (ctx: KeywordLiteralContext) => {
     if (ctx.NULL()) {
-      this.buffer.push(ctx.getText().toLowerCase());
-    } else if (ctx.NAN()) {
-      this.buffer.push('NaN');
+      this.visitTerminalRaw(ctx.NULL(), { lowerCase: true });
     } else {
       this.buffer.push(ctx.getText());
     }

@@ -157,7 +157,7 @@ RETURN null, true, false`;
 
     const query2 = 'MATCH (NAN) RETURN NAN';
     // The first one is a symbolic name, the second one is a literal
-    const expected2 = 'MATCH (NAN)\nRETURN NaN';
+    const expected2 = 'MATCH (NAN)\nRETURN NAN';
     expect(formatQuery(query2)).toEqual(expected2);
 
     const query3 = 'MATCH (INF) RETURN INF';
