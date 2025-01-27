@@ -397,15 +397,14 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
   };
 }
 
-type FormattingResult = FormattingResultWithCursor | string;
-
 interface FormattingResultWithCursor {
   formattedString: string;
   newCursorPos: number;
 }
 
-
-export function formatQuery(query: string, cursorPosition?: number): FormattingResult {
+export function formatQuery(query: string): string;
+export function formatQuery(query: string, cursorPosition: number): FormattingResultWithCursor;
+export function formatQuery(query: string, cursorPosition?: number): string | FormattingResultWithCursor {
   const inputStream = CharStreams.fromString(query);
   const lexer = new CypherLexer(inputStream);
   const tokens = new CommonTokenStream(lexer);
@@ -420,11 +419,13 @@ export function formatQuery(query: string, cursorPosition?: number): FormattingR
     return result;
   }
 
-  if (query.length === cursorPosition) {
+  if (query.length === cursorPosition
+    || cursorPosition === 0
+  ) {
     const result = visitor.format(tree);
     return {
       formattedString: result,
-      newCursorPos: result.length
+      newCursorPos: cursorPosition === 0 ? 0 : result.length
     }
   }
 
@@ -461,3 +462,5 @@ if (query.at(currentPos - 1) !== ' ' && query.at(currentPos - 1) !== '\n') {
     newCursorPos: (visitor.cursorPos + relativePosition) + backOfLine
   };
 }
+
+
