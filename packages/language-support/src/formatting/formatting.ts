@@ -92,19 +92,18 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
     this.visitTerminalRaw(ctx.ARROW_LINE());
   };
 
-  // TODO these don't want to visit raw for some reason
-  visitRightArrow = (_ctx: RightArrowContext) => {
-    this.buffer.push('>');
+  visitRightArrow = (ctx: RightArrowContext) => {
+    this.visitTerminalRaw(ctx.GT());
   };
 
-  visitLeftArrow = (_ctx: LeftArrowContext) => {
-    this.buffer.push('<');
+  visitLeftArrow = (ctx: LeftArrowContext) => {
+    this.visitTerminalRaw(ctx.LT());
   };
 
   visitCountStar = (ctx: CountStarContext) => {
     this.buffer.push(ctx.COUNT().getText());
     this.visit(ctx.LPAREN());
-    this.buffer.push('*');
+    this.visitTerminalRaw(ctx.TIMES());
     this.visit(ctx.RPAREN());
   };
 
