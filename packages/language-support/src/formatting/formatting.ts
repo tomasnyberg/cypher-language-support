@@ -36,6 +36,7 @@ interface RawTerminalOptions {
 export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
   buffer: string[] = [];
   indentation = 0;
+  indentationSpaces = 2;
 
   constructor(private tokenStream: CommonTokenStream) {
     super();
@@ -53,6 +54,14 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
   addIndentation = () => this.indentation++;
 
   removeIndentation = () => this.indentation--;
+
+  applyIndentation = () => {
+    for (let i = 0; i < this.indentation; i++) {
+      for (let j = 0; j < this.indentationSpaces; j++) {
+        this.buffer.push(' ');
+      }
+    }
+  }
 
   // Comments are in the hidden channel, so grab them manually
   addCommentsBefore = (node: TerminalNode) => {
@@ -157,10 +166,7 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
       this.buffer.length > 0 &&
       this.buffer[this.buffer.length - 1] === '\n'
     ) {
-      for (let i = 0; i < this.indentation; i++) {
-        this.buffer.push(' ');
-        this.buffer.push(' ');
-      }
+      this.applyIndentation();
     }
 
     if (
