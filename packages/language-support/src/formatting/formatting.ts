@@ -48,8 +48,15 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
   targetToken = -1;
   cursorPos = -1;
 
-  constructor(private tokenStream: CommonTokenStream, targetToken: number) {
+  constructor(private tokenStream: CommonTokenStream) {
     super();
+  }
+
+  getTargetToken= (): number => {
+    return this.targetToken;
+  }
+
+  setTargetToken = (targetToken: number): void => {
     this.targetToken = targetToken;
   }
 
@@ -382,40 +389,62 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
   };
 }
 
-interface FormattingResult {
+type FormattingResult = FormattingResultWithCursor | string;
+
+interface FormattingResultWithCursor {
   formattedString: string;
   newCursorPos: number;
 }
 
 
-
 export function formatQuery(query: string, cursorPosition?: number): FormattingResult {
-    
-    // If cursor is at end of line with space
-    const spaceAtCursor = query.at(cursorPosition) === ' ' || query.at(cursorPosition) === '\n'
-    while (query.at(cursorPosition) === ' ' || query.at(cursorPosition) === '\n') {
-      console.log(cursorPosition)
-      cursorPosition--;
-    }
-
   const inputStream = CharStreams.fromString(query);
   const lexer = new CypherLexer(inputStream);
   const tokens = new CommonTokenStream(lexer);
   tokens.fill()
-  const targetToken = tokens.tokens.find(token => {
-    const start = token.start;
-    const stop = token.stop;
-    return cursorPosition >= start && cursorPosition <= stop;
-  });
-  const relativePosition = cursorPosition - targetToken.start
   const parser = new CypherCmdParser(tokens);
   parser.buildParseTrees = true;
   const tree = parser.statementsOrCommands();
-  const visitor = new TreePrintVisitor(tokens, targetToken.tokenIndex);
-  const result = visitor.format(tree);
   
+  if (!cursorPosition) {
+    const visitor = new TreePrintVisitor(tokens);
+    const result = visitor.format(tree);
+    return result;
+  }
+
+  if (query.length === cursorPosition) {
+    const visitor = new TreePrintVisitor(tokens);
+    const result = visitor.format(tree);
+    return {
+      formattedString: result,
+      newCursorPos: result.length
+    }
+  }
+  let currentPos = cursorPosition;
+  let backOfLine = 0
+  // If cursor is at space
+  
+  while (query.at(currentPos) === ' ') {
+    currentPos++;
+  }
+  
+  while (query.at(currentPos) === ' ' || query.at(currentPos) === '\n') {
+    currentPos--;
+    backOfLine = 1;
+  }
+  
+  const targetToken = tokens.tokens.find(token => {
+    const start = token.start;
+    const stop = token.stop;
+    return currentPos >= start && currentPos <= stop;
+  });
+  const relativePosition = currentPos - targetToken.start
+  
+  const visitor = new TreePrintVisitor(tokens);
+  visitor.setTargetToken(targetToken.tokenIndex)
+  const result = visitor.format(tree);
   return {
     formattedString: result,
-    newCursorPos: (visitor.cursorPos + relativePosition) + (spaceAtCursor ? 1 : 0)
+    newCursorPos: (visitor.cursorPos + relativePosition) + backOfLine
   };
 }
