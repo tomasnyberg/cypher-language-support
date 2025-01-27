@@ -81,39 +81,34 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
   };
 
   // Handled separately because clauses shuold have newlines
-  visitClause = (ctx: ClauseContext): string => {
+  visitClause = (ctx: ClauseContext) => {
     this.breakLine();
     this.visitChildren(ctx);
-    return ctx.getText();
   };
 
   // Visit these separately because operators want spaces around them,
   // and these are not operators (despite being minuses).
-  visitArrowLine = (ctx: ArrowLineContext): string => {
+  visitArrowLine = (_ctx: ArrowLineContext) => {
     this.buffer.push('-');
-    return ctx.getText();
   };
 
-  visitRightArrow = (ctx: RightArrowContext): string => {
+  visitRightArrow = (_ctx: RightArrowContext) => {
     this.buffer.push('>');
-    return ctx.getText();
   };
 
-  visitLeftArrow = (ctx: LeftArrowContext): string => {
+  visitLeftArrow = (_ctx: LeftArrowContext) => {
     this.buffer.push('<');
-    return ctx.getText();
   };
 
-  visitCountStar = (ctx: CountStarContext): string => {
+  visitCountStar = (ctx: CountStarContext) => {
     this.buffer.push(ctx.COUNT().getText());
     this.visit(ctx.LPAREN());
     this.buffer.push('*');
     this.visit(ctx.RPAREN());
-    return ctx.getText();
   };
 
   // Handled separately since otherwise they will get weird spacing
-  visitLabelExpression = (ctx: LabelExpressionContext): string => {
+  visitLabelExpression = (ctx: LabelExpressionContext) => {
     if (ctx.COLON()) {
       this.buffer.push(':');
     }
@@ -121,10 +116,9 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
       this.buffer.push('IS');
     }
     this.visit(ctx.labelExpression4());
-    return ctx.getText();
   };
 
-  visitTerminal = (node: TerminalNode): string => {
+  visitTerminal = (node: TerminalNode) => {
     if (this.buffer.length === 0) {
       this.addCommentsBefore(node);
     }
@@ -148,7 +142,7 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
       }
     }
     if (node.symbol.type === CypherCmdLexer.EOF) {
-      return node.getText();
+      return;
     }
     if (wantsToBeUpperCase(node)) {
       this.buffer.push(node.getText().toUpperCase());
@@ -159,15 +153,13 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
       this.buffer.push(' ');
     }
     this.addCommentsAfter(node);
-    return node.getText();
   };
 
-  visitBooleanLiteral = (ctx: BooleanLiteralContext): string => {
+  visitBooleanLiteral = (ctx: BooleanLiteralContext) => {
     this.buffer.push(ctx.getText().toLowerCase());
-    return ctx.getText();
   };
 
-  visitKeywordLiteral = (ctx: KeywordLiteralContext): string => {
+  visitKeywordLiteral = (ctx: KeywordLiteralContext) => {
     if (ctx.NULL()) {
       this.buffer.push(ctx.getText().toLowerCase());
     } else if (ctx.NAN()) {
@@ -175,7 +167,6 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
     } else {
       this.buffer.push(ctx.getText());
     }
-    return ctx.getText();
   };
 
   // The patterns are handled separately because we need spaces
@@ -201,14 +192,13 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
     }
   };
 
-  visitNodePattern = (ctx: NodePatternContext): string => {
+  visitNodePattern = (ctx: NodePatternContext) => {
     this.visit(ctx.LPAREN());
     this.handleInnerPatternContext(ctx);
     this.visit(ctx.RPAREN());
-    return ctx.getText();
   };
 
-  visitRelationshipPattern = (ctx: RelationshipPatternContext): string => {
+  visitRelationshipPattern = (ctx: RelationshipPatternContext) => {
     if (ctx.leftArrow()) {
       this.visit(ctx.leftArrow());
     }
@@ -222,14 +212,12 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
     if (ctx.rightArrow()) {
       this.visit(ctx.rightArrow());
     }
-    return ctx.getText();
   };
 
   // Handled separately because the dot is not an operator
-  visitProperty = (ctx: PropertyContext): string => {
+  visitProperty = (ctx: PropertyContext) => {
     this.buffer.push('.');
     this.visit(ctx.propertyKeyName());
-    return ctx.getText();
   };
 
   // Handled separately because where is not a clause (it is a subclause)
@@ -239,7 +227,7 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
   };
 
   // Handled separately because it contains subclauses (and thus indentation rules)
-  visitExistsExpression = (ctx: ExistsExpressionContext): string => {
+  visitExistsExpression = (ctx: ExistsExpressionContext) => {
     this.buffer.push('EXISTS');
     this.buffer.push(' {');
     if (ctx.regularQuery()) {
@@ -259,11 +247,10 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
       this.buffer.push(' ');
     }
     this.buffer.push('}');
-    return '';
   };
 
   // Handled separately because we want ON CREATE bedfore ON MATCH
-  visitMergeClause = (ctx: MergeClauseContext): string => {
+  visitMergeClause = (ctx: MergeClauseContext) => {
     this.visit(ctx.MERGE());
     this.visit(ctx.pattern());
     // ON CREATE should come before ON MATCH
@@ -282,24 +269,22 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
     mergeActions.forEach((action) => {
       this.visit(action);
     });
-    return ctx.getText();
   };
 
   // Handled separately because it wants indentation
   // https://neo4j.com/docs/cypher-manual/current/styleguide/#cypher-styleguide-indentation-and-line-breaks
-  visitMergeAction = (ctx: MergeActionContext): string => {
+  visitMergeAction = (ctx: MergeActionContext) => {
     if (this.buffer.length > 0) {
       this.breakLine();
       this.buffer.push(' ');
       this.buffer.push(' ');
     }
     this.visitChildren(ctx);
-    return ctx.getText();
   };
 
   // Map has its formatting rules, see:
   // https://neo4j.com/docs/cypher-manual/current/styleguide/#cypher-styleguide-spacing
-  visitMap = (ctx: MapContext): string => {
+  visitMap = (ctx: MapContext) => {
     this.buffer.push('{');
 
     const propertyKeyNames = ctx.propertyKeyName_list();
@@ -314,7 +299,6 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
       }
     }
     this.buffer.push('}');
-    return '';
   };
 }
 
