@@ -211,7 +211,6 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
     }
     if(node.symbol.tokenIndex === this.targetToken) {
       this.cursorPos = this.buffer.join('').length;
-      console.log("found: ", node.getText())
     }
     if (wantsToBeUpperCase(node)) {
       this.buffer.push(node.getText().toUpperCase());
@@ -245,7 +244,6 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
     }
     if(node.symbol.tokenIndex === this.targetToken) {
       this.cursorPos = this.buffer.join('').length;
-      console.log("found: ", node.getText())
     }
     this.buffer.push(result);
    
