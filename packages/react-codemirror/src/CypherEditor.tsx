@@ -13,7 +13,7 @@ import {
   placeholder,
   ViewUpdate,
 } from '@codemirror/view';
-import { type DbSchema } from '@neo4j-cypher/language-support';
+import { formatQuery, type DbSchema } from '@neo4j-cypher/language-support';
 import debounce from 'lodash.debounce';
 import { Component, createRef } from 'react';
 import { DEBOUNCE_TIME } from './constants';
@@ -176,6 +176,90 @@ export interface CypherEditorProps {
   moveFocusOnTab?: boolean;
 }
 
+function findNewCursorPosition(
+  originalText: string, 
+  formattedText: string, 
+  originalCursor: number
+): number {
+  // If cursor is at the end, keep it at the end
+  if (originalCursor >= originalText.length) {
+    return formattedText.length;
+  }
+
+  // Create a map of character positions before and after formatting
+  const positionMap = new Map<number, number>();
+  let formattedIndex = 0;
+  let originalIndex = 0;
+
+  // Keep track of last valid mapping
+  let lastMappedOriginal = 0;
+  let lastMappedFormatted = 0;
+
+  while (originalIndex < originalText.length && formattedIndex < formattedText.length) {
+    // Store position before skipping whitespace
+    const currentOriginal = originalIndex;
+    const currentFormatted = formattedIndex;
+
+    // Skip whitespace in original text
+    while (originalIndex < originalText.length && originalText[originalIndex].trim() === '') {
+      originalIndex++;
+    }
+
+    // Skip whitespace in formatted text
+    while (formattedIndex < formattedText.length && formattedText[formattedIndex].trim() === '') {
+      formattedIndex++;
+    }
+
+    // If we're at a non-whitespace character in both texts
+    if (originalIndex < originalText.length && formattedIndex < formattedText.length) {
+      // Map both the start of whitespace and the actual character
+      if (currentOriginal !== originalIndex) {
+        positionMap.set(currentOriginal, currentFormatted);
+      }
+      positionMap.set(originalIndex, formattedIndex);
+      lastMappedOriginal = originalIndex;
+      originalIndex++;
+      formattedIndex++;
+    }
+  }
+
+  // If cursor is exactly at a mapped position, use that
+  if (positionMap.has(originalCursor)) {
+    return positionMap.get(originalCursor);
+  }
+
+  // Find the closest mapped position, preferring the position after the cursor
+  let beforePos = -1;
+  let afterPos = originalText.length;
+
+  for (const [origPos] of positionMap) {
+    if (origPos <= originalCursor && origPos > beforePos) {
+      beforePos = origPos;
+    }
+    if (origPos >= originalCursor && origPos < afterPos) {
+      afterPos = origPos;
+    }
+  }
+
+  // If cursor is between two mapped positions, choose the appropriate one
+  if (beforePos !== -1 && afterPos !== originalText.length) {
+    // If cursor is closer to the position after it, use that
+    if (originalCursor - beforePos > afterPos - originalCursor) {
+      return positionMap.get(afterPos);
+    }
+    // Otherwise use the position before it
+    return positionMap.get(beforePos);
+  }
+
+  // If we can't find a good position, keep cursor at the end
+  if (originalCursor > lastMappedOriginal) {
+    return formattedText.length;
+  }
+
+  // Default to the closest mapped position
+  return positionMap.get(beforePos !== -1 ? beforePos : afterPos) ?? formattedText.length;
+}
+
 const executeKeybinding = (
   onExecute?: (cmd: string) => void,
   newLineOnEnter?: boolean,
@@ -195,7 +279,6 @@ const executeKeybinding = (
       run: insertNewline,
     },
   };
-
   if (onExecute) {
     keybindings['Ctrl-Enter'] = {
       key: 'Ctrl-Enter',
@@ -208,6 +291,32 @@ const executeKeybinding = (
           onExecute(doc);
         }
 
+        return true;
+      },
+    };
+
+    keybindings['Ctrl-f'] = {
+      key: 'Ctrl-f',
+      mac: 'Ctrl-f',
+      preventDefault: true,
+      run: (view: EditorView) => {
+        const doc = view.state.doc.toString();
+        const formattedText = formatQuery(doc);
+
+        const newPos = findNewCursorPosition(doc, formattedText, view.state.selection.main.anchor)
+
+        // Apply the formatting
+        view.dispatch({
+          changes: {
+            from: 0,
+            to: doc.length,
+            insert: formattedText,
+          },
+          selection: {anchor: newPos}
+        });
+
+        // Get the new document state
+    
         return true;
       },
     };
