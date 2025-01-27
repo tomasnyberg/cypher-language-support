@@ -1,4 +1,4 @@
-import { formatQuery } from '../formatting/../../formatting/visitor';
+import { formatQuery } from '../formatting/../../formatting/formatting';
 
 describe('should format correctly', () => {
   test('on match indentation example', () => {

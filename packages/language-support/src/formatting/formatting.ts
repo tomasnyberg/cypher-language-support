@@ -8,7 +8,6 @@ import CypherCmdParser, {
   BooleanLiteralContext,
   ClauseContext,
   CountStarContext,
-  EscapedSymbolicNameStringContext,
   ExistsExpressionContext,
   KeywordLiteralContext,
   LabelExpressionContext,
@@ -20,47 +19,14 @@ import CypherCmdParser, {
   PropertyContext,
   RelationshipPatternContext,
   RightArrowContext,
-  UnescapedSymbolicNameString_Context,
   WhereClauseContext,
 } from '../generated-parser/CypherCmdParser';
 import CypherCmdParserVisitor from '../generated-parser/CypherCmdParserVisitor';
-import { lexerKeywords, lexerOperators } from '../lexerSymbols';
+import {
+  wantsSpaceAfter, wantsSpaceBefore, wantsToBeUpperCase
+  , is_comment,
+} from './formattingHelpers';
 
-function wantsToBeUpperCase(node: TerminalNode): boolean {
-  return isKeywordTerminal(node);
-}
-
-function wantsSpaceBefore(node: TerminalNode): boolean {
-  return isKeywordTerminal(node) || lexerOperators.includes(node.symbol.type);
-}
-
-function wantsSpaceAfter(node: TerminalNode): boolean {
-  return (
-    isKeywordTerminal(node) ||
-    lexerOperators.includes(node.symbol.type) ||
-    node.symbol.type === CypherCmdLexer.COMMA
-  );
-}
-
-function isKeywordTerminal(node: TerminalNode): boolean {
-  return lexerKeywords.includes(node.symbol.type) && !isSymbolicName(node);
-}
-
-function is_comment(token: Token) {
-  return (
-    token.type === CypherCmdLexer.MULTI_LINE_COMMENT ||
-    token.type === CypherCmdLexer.SINGLE_LINE_COMMENT
-  );
-}
-
-// Variables or property names that have the same name as a keyword should not be
-// treated as keywords
-function isSymbolicName(node: TerminalNode): boolean {
-  return (
-    node.parentCtx instanceof UnescapedSymbolicNameString_Context ||
-    node.parentCtx instanceof EscapedSymbolicNameStringContext
-  );
-}
 
 export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
   buffer: string[] = [];
