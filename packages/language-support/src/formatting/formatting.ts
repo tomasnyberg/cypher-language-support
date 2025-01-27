@@ -1,4 +1,9 @@
-import { CharStreams, CommonTokenStream, TerminalNode } from 'antlr4';
+import {
+  CharStreams,
+  CommonTokenStream,
+  ParserRuleContext,
+  TerminalNode,
+} from 'antlr4';
 import {
   default as CypherCmdLexer,
   default as CypherLexer,
@@ -113,17 +118,17 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
     }
   };
 
-  visitIfNotNull = (ctx: any) => {
+  visitIfNotNull = (ctx: ParserRuleContext | TerminalNode) => {
     if (ctx) {
       this.visit(ctx);
     }
-  }
+  };
 
-  visitRawIfNotNull = (ctx: any, options?: RawTerminalOptions) => {
+  visitRawIfNotNull = (ctx: TerminalNode, options?: RawTerminalOptions) => {
     if (ctx) {
       this.visitTerminalRaw(ctx, options);
     }
-  }
+  };
 
   visitClause = (ctx: ClauseContext) => {
     this.breakLine();
