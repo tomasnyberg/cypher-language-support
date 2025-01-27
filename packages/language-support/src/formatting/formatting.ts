@@ -1,4 +1,4 @@
-import { CharStreams, CommonTokenStream, TerminalNode, Token } from 'antlr4';
+import { CharStreams, CommonTokenStream, TerminalNode } from 'antlr4';
 import {
   default as CypherCmdLexer,
   default as CypherLexer,
@@ -28,7 +28,7 @@ import {
 } from './formattingHelpers';
 
 
-export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
+export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
   buffer: string[] = [];
   indentation = 0;
 
@@ -212,8 +212,6 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
     if (ctx.leftArrow()) {
       this.visit(ctx.leftArrow());
     }
-    // TODO: the buffer.push('-') might have to be handled differently, as this doesn't
-    // visit the terminal and thus might miss e.g. comments.
     this.buffer.push('-');
     if (ctx.LBRACKET()) {
       this.visit(ctx.LBRACKET());
@@ -235,9 +233,9 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<string> {
   };
 
   // Handled separately because where is not a clause (it is a subclause)
-  visitWhereClause = (ctx: WhereClauseContext): string => {
+  visitWhereClause = (ctx: WhereClauseContext) => {
     this.breakLine();
-    return this.visitChildren(ctx);
+    this.visitChildren(ctx);
   };
 
   // Handled separately because it contains subclauses (and thus indentation rules)
@@ -329,6 +327,5 @@ export function formatQuery(query: string) {
   const tree = parser.statementsOrCommands();
   const visitor = new TreePrintVisitor(tokens);
   visitor.visit(tree);
-  console.log(visitor.buffer.join(''));
   return visitor.buffer.join('').trim();
 }
