@@ -231,7 +231,7 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
 
   // Handled separately because the dot is not an operator
   visitProperty = (ctx: PropertyContext) => {
-    this.buffer.push('.');
+    this.visitTerminalRaw(ctx.DOT());
     this.visit(ctx.propertyKeyName());
   };
 
@@ -243,12 +243,12 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
 
   // Handled separately because it contains subclauses (and thus indentation rules)
   visitExistsExpression = (ctx: ExistsExpressionContext) => {
-    this.buffer.push('EXISTS');
-    this.buffer.push(' {');
+    this.visit(ctx.EXISTS());
+    this.visit(ctx.LCURLY());
     if (ctx.regularQuery()) {
       this.indentation++;
       this.visit(ctx.regularQuery());
-      this.buffer.push('\n');
+      this.breakLine();
       this.indentation--;
     } else {
       this.buffer.push(' ');
@@ -261,7 +261,7 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
       }
       this.buffer.push(' ');
     }
-    this.buffer.push('}');
+    this.visit(ctx.RCURLY());
   };
 
   // Handled separately because we want ON CREATE before ON MATCH
