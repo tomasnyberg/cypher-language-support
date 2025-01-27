@@ -61,7 +61,7 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
     );
     for (const commentToken of commentTokens) {
       this.buffer.push(commentToken.text.trim());
-      this.buffer.push('\n');
+      this.breakLine();
     }
   };
 
