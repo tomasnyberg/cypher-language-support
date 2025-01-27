@@ -51,14 +51,23 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
     }
   };
 
+  addSpace = (multiple?: boolean) => {
+    if (!multiple && this.buffer.length > 0 && this.buffer[this.buffer.length - 1] === ' ') {
+      return;
+    }
+    this.buffer.push(' ');
+  }
+
   addIndentation = () => this.indentation++;
 
   removeIndentation = () => this.indentation--;
 
   applyIndentation = () => {
+    const multiple = true;
     for (let i = 0; i < this.indentation; i++) {
       for (let j = 0; j < this.indentationSpaces; j++) {
-        this.buffer.push(' ');
+
+        this.addSpace(multiple);
       }
     }
   }
@@ -92,7 +101,7 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
         this.buffer[this.buffer.length - 1] !== ' ' &&
         this.buffer[this.buffer.length - 1] !== '\n'
       ) {
-        this.buffer.push(' ');
+        this.addSpace()
       }
       this.buffer.push(commentToken.text.trim());
       this.breakLine();
@@ -175,7 +184,7 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
       this.buffer[this.buffer.length - 1] !== ' '
     ) {
       if (wantsSpaceBefore(node)) {
-        this.buffer.push(' ');
+        this.addSpace()
       }
     }
     if (node.symbol.type === CypherCmdLexer.EOF) {
@@ -187,7 +196,7 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
       this.buffer.push(node.getText());
     }
     if (wantsSpaceAfter(node)) {
-      this.buffer.push(' ');
+      this.addSpace()
     }
     this.addCommentsAfter(node);
   };
@@ -239,7 +248,7 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
       this.visit(ctx.labelExpression());
     }
     if (ctx.labelExpression() && ctx.properties()) {
-      this.buffer.push(' ');
+      this.addSpace()
     }
     if (ctx.properties()) {
       this.visit(ctx.properties());
@@ -295,7 +304,7 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
       this.breakLine();
       this.removeIndentation();
     } else {
-      this.buffer.push(' ');
+      this.addSpace()
       if (ctx.matchMode()) {
         this.visit(ctx.matchMode());
       }
@@ -303,7 +312,7 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
       if (ctx.whereClause()) {
         this.visit(ctx.whereClause());
       }
-      this.buffer.push(' ');
+      this.addSpace()
     }
     this.visit(ctx.RCURLY());
   };
@@ -334,10 +343,11 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
   visitMergeAction = (ctx: MergeActionContext) => {
     if (this.buffer.length > 0) {
       this.breakLine();
-      this.buffer.push(' ');
-      this.buffer.push(' ');
+      this.addIndentation();
+      this.applyIndentation();
     }
     this.visitChildren(ctx);
+    this.removeIndentation();
   };
 
   // Map has its own formatting rules, see:
@@ -352,7 +362,7 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
     for (let i = 0; i < expressions.length; i++) {
       this.visit(propertyKeyNames[i]);
       this.visitTerminalRaw(colonList[i]);
-      this.buffer.push(' ');
+      this.addSpace()
       this.visit(expressions[i]);
       if (i < expressions.length - 1) {
         this.visit(commaList[i]);
