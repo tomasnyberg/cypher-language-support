@@ -168,6 +168,7 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
     this.addCommentsAfter(node);
   }
 
+  // TODO add options to visit raw or smth so that we can get it lowercased
   visitBooleanLiteral = (ctx: BooleanLiteralContext) => {
     this.buffer.push(ctx.getText().toLowerCase());
   };
@@ -215,13 +216,14 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
     if (ctx.leftArrow()) {
       this.visit(ctx.leftArrow());
     }
-    this.buffer.push('-');
+    const arrowLineList = ctx.arrowLine_list();
+    this.visitTerminalRaw(arrowLineList[0].MINUS())
     if (ctx.LBRACKET()) {
       this.visit(ctx.LBRACKET());
       this.handleInnerPatternContext(ctx);
       this.visit(ctx.RBRACKET());
     }
-    this.buffer.push('-');
+    this.visitTerminalRaw(arrowLineList[1].MINUS())
     if (ctx.rightArrow()) {
       this.visit(ctx.rightArrow());
     }
