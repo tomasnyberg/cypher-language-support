@@ -36,6 +36,19 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
     super();
   }
 
+  breakLine = () => {
+    if (
+      this.buffer.length > 0 &&
+      this.buffer[this.buffer.length - 1] !== '\n'
+    ) {
+      this.buffer.push('\n');
+    }
+  };
+
+  addIndentation = () => this.indentation++;
+
+  removeIndentation = () => this.indentation--;
+
   // Comments are in the hidden channel, so grab them manually
   addCommentsBefore = (node: TerminalNode) => {
     const token = node.symbol;
@@ -72,14 +85,6 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
     }
   };
 
-  breakLine = () => {
-    if (
-      this.buffer.length > 0 &&
-      this.buffer[this.buffer.length - 1] !== '\n'
-    ) {
-      this.buffer.push('\n');
-    }
-  };
 
   visitClause = (ctx: ClauseContext) => {
     this.breakLine();
@@ -246,10 +251,10 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
     this.visit(ctx.EXISTS());
     this.visit(ctx.LCURLY());
     if (ctx.regularQuery()) {
-      this.indentation++;
+      this.addIndentation();
       this.visit(ctx.regularQuery());
       this.breakLine();
-      this.indentation--;
+      this.removeIndentation();
     } else {
       this.buffer.push(' ');
       if (ctx.matchMode()) {
