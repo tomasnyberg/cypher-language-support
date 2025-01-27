@@ -211,6 +211,10 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
   // Some terminals don't want to have the regular rules applied to them,
   // for instance the . in properties should be handled in a "raw" manner to
   // avoid getting spaces around it (since it is an operator and operators want spaces)
+  // But we still need to get the comments, to ensure that in e.g. the query
+  // node. // comment
+  // prop
+  // the comment doesn't disappear
   visitTerminalRaw = (node: TerminalNode, options?: RawTerminalOptions) => {
     if (this.buffer.length === 0) {
       this.addCommentsBefore(node);

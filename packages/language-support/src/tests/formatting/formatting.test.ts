@@ -61,6 +61,16 @@ RETURN map`;
 });
 
 describe('should not forget to include all comments', () => {
+  test('property comments', () => {
+    const propertycomments = `match (n)
+return n. // comment
+prop`;
+    const expected = `MATCH (n)
+RETURN n. // comment
+prop`;
+    expect(formatQuery(propertycomments)).toEqual(expected);
+  });
+
   test('basic inline comments', () => {
     // Whitespace after the comment lines is intentional. It shuold be removed
     const inlinecomments = `
