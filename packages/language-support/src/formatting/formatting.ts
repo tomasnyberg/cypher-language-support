@@ -111,7 +111,7 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
   };
 
   visitCountStar = (ctx: CountStarContext) => {
-    this.buffer.push(ctx.COUNT().getText());
+    this.visitTerminalRaw(ctx.COUNT());
     this.visit(ctx.LPAREN());
     this.visitTerminalRaw(ctx.TIMES());
     this.visit(ctx.RPAREN());
@@ -217,7 +217,7 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
     if (ctx.NULL()) {
       this.visitTerminalRaw(ctx.NULL(), { lowerCase: true });
     } else {
-      this.buffer.push(ctx.getText());
+      this.visitChildren(ctx);
     }
   };
 
