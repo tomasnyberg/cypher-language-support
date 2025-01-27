@@ -167,17 +167,14 @@ RETURN null, true, false`;
 
   test('can handle using keyword literal names in weird ways', () => {
     const query1 = 'MATCH (NULL) RETURN NULL';
-    // The first one is a symbolic name, the second one is a literal
     const expected1 = 'MATCH (NULL)\nRETURN null';
     expect(formatQuery(query1)).toEqual(expected1);
 
     const query2 = 'MATCH (NAN) RETURN NAN';
-    // The first one is a symbolic name, the second one is a literal
     const expected2 = 'MATCH (NAN)\nRETURN NAN';
     expect(formatQuery(query2)).toEqual(expected2);
 
     const query3 = 'MATCH (INF) RETURN INF';
-    // The first one is a symbolic name, the second one is a literal
     const expected3 = 'MATCH (INF)\nRETURN INF';
     expect(formatQuery(query3)).toEqual(expected3);
   });
