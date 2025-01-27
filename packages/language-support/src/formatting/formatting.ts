@@ -25,6 +25,7 @@ import CypherCmdParser, {
   PropertyContext,
   RelationshipPatternContext,
   RightArrowContext,
+  StatementsOrCommandsContext,
   WhereClauseContext,
 } from '../generated-parser/CypherCmdParser';
 import CypherCmdParserVisitor from '../generated-parser/CypherCmdParserVisitor';
@@ -48,6 +49,11 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
   constructor(private tokenStream: CommonTokenStream) {
     super();
   }
+
+  format = (root: StatementsOrCommandsContext) => {
+    this.visit(root);
+    return this.buffer.join('').trim();
+  };
 
   breakLine = () => {
     if (
@@ -230,6 +236,8 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
     this.addCommentsAfter(node);
   };
 
+  // Literals have casing rules, see
+  // https://neo4j.com/docs/cypher-manual/current/styleguide/#cypher-styleguide-casing
   visitBooleanLiteral = (ctx: BooleanLiteralContext) => {
     this.visitRawIfNotNull(ctx.TRUE(), { lowerCase: true });
     this.visitRawIfNotNull(ctx.FALSE(), { lowerCase: true });
@@ -373,6 +381,5 @@ export function formatQuery(query: string) {
   parser.buildParseTrees = true;
   const tree = parser.statementsOrCommands();
   const visitor = new TreePrintVisitor(tokens);
-  visitor.visit(tree);
-  return visitor.buffer.join('').trim();
+  return visitor.format(tree);
 }
