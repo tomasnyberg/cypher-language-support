@@ -386,27 +386,28 @@ interface FormattingResult {
   formattedString: string;
   newCursorPos: number;
 }
+
+
+
 export function formatQuery(query: string, cursorPosition?: number): FormattingResult {
-  const currentPosIsSpace = query.at(cursorPosition) === ' '
-  if (currentPosIsSpace) {
-    cursorPosition--;
-  }
+    
+    // If cursor is at end of line with space
+    const spaceAtCursor = query.at(cursorPosition) === ' ' || query.at(cursorPosition) === '\n'
+    while (query.at(cursorPosition) === ' ' || query.at(cursorPosition) === '\n') {
+      console.log(cursorPosition)
+      cursorPosition--;
+    }
 
   const inputStream = CharStreams.fromString(query);
   const lexer = new CypherLexer(inputStream);
   const tokens = new CommonTokenStream(lexer);
-
-  const inputStream1 = CharStreams.fromString(query);
-  const lexer1 = new CypherLexer(inputStream1);
-  const tokens1 = new CommonTokenStream(lexer1);
-  tokens1.fill()
-  const targetToken = tokens1.tokens.find(token => {
+  tokens.fill()
+  const targetToken = tokens.tokens.find(token => {
     const start = token.start;
     const stop = token.stop;
     return cursorPosition >= start && cursorPosition <= stop;
   });
   const relativePosition = cursorPosition - targetToken.start
-
   const parser = new CypherCmdParser(tokens);
   parser.buildParseTrees = true;
   const tree = parser.statementsOrCommands();
@@ -415,6 +416,6 @@ export function formatQuery(query: string, cursorPosition?: number): FormattingR
   
   return {
     formattedString: result,
-    newCursorPos: (visitor.cursorPos + relativePosition) + (currentPosIsSpace ? 1 : 0)
+    newCursorPos: (visitor.cursorPos + relativePosition) + (spaceAtCursor ? 1 : 0)
   };
 }
