@@ -405,7 +405,7 @@ export class CypherEditor extends Component<
           }),
         ]
       : [];
-    if (this.props.featureFlags.format) {
+    if (this.props.featureFlags && this.props.featureFlags.format) {
       extraKeybindings.push({
         key: 'Ctrl-Shift-f',
         mac: 'Alt-Shift-f',
