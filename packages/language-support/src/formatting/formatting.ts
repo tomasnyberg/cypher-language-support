@@ -290,13 +290,6 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
     this.visit(ctx.RPAREN());
   };
 
-  visitParameter = (ctx: ParameterContext) => {
-    this.visitTerminalRaw(ctx.DOLLAR());
-    this.visit(ctx.parameterName());
-  };
-
-  // Add visit subquery clause
-
   visitRelationshipPattern = (ctx: RelationshipPatternContext) => {
     this.visitIfNotNull(ctx.leftArrow());
     const arrowLineList = ctx.arrowLine_list();
@@ -410,7 +403,7 @@ export function formatQuery(
   query: string,
   cursorPosition?: number,
 ): string | FormattingResultWithCursor {
-  
+
   const inputStream = CharStreams.fromString(query);
   const lexer = new CypherLexer(inputStream);
   const tokens = new CommonTokenStream(lexer);
