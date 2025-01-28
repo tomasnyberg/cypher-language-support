@@ -1,10 +1,10 @@
-import { CharStreams, CommonTokenStream, TerminalNode } from 'antlr4';
-import { default as CypherLexer } from '../generated-parser/CypherCmdLexer';
-import CypherCmdParser, {
+import { TerminalNode } from 'antlr4';
+import {
   MergeClauseContext,
   StatementsOrCommandsContext,
 } from '../generated-parser/CypherCmdParser';
 import CypherCmdParserVisitor from '../generated-parser/CypherCmdParserVisitor';
+import { getParseTreeAndTokens } from './formattingHelpers';
 
 class StandardizingVisitor extends CypherCmdParserVisitor<void> {
   buffer = [];
@@ -41,12 +41,7 @@ class StandardizingVisitor extends CypherCmdParserVisitor<void> {
 }
 
 export function standardizeQuery(query: string): string {
-  const inputStream = CharStreams.fromString(query);
-  const lexer = new CypherLexer(inputStream);
-  const tokens = new CommonTokenStream(lexer);
-  const parser = new CypherCmdParser(tokens);
-  parser.buildParseTrees = true;
-  const tree = parser.statementsOrCommands();
+  const { tree } = getParseTreeAndTokens(query);
   const visitor = new StandardizingVisitor();
   return visitor.format(tree);
 }

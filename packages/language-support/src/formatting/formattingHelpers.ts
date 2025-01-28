@@ -1,6 +1,6 @@
-import { TerminalNode, Token } from 'antlr4';
+import { CharStreams, CommonTokenStream, TerminalNode, Token } from 'antlr4';
 import { default as CypherCmdLexer } from '../generated-parser/CypherCmdLexer';
-import {
+import CypherCmdParser, {
   EscapedSymbolicNameStringContext,
   UnescapedSymbolicNameString_Context,
 } from '../generated-parser/CypherCmdParser';
@@ -40,4 +40,14 @@ function isSymbolicName(node: TerminalNode): boolean {
     node.parentCtx instanceof UnescapedSymbolicNameString_Context ||
     node.parentCtx instanceof EscapedSymbolicNameStringContext
   );
+}
+
+export function getParseTreeAndTokens(query: string) {
+  const inputStream = CharStreams.fromString(query);
+  const lexer = new CypherCmdLexer(inputStream);
+  const tokens = new CommonTokenStream(lexer);
+  const parser = new CypherCmdParser(tokens);
+  parser.buildParseTrees = true;
+  const tree = parser.statementsOrCommands();
+  return { tree, tokens };
 }

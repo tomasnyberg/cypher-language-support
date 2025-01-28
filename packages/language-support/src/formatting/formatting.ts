@@ -1,14 +1,6 @@
+import { CommonTokenStream, ParserRuleContext, TerminalNode } from 'antlr4';
+import { default as CypherCmdLexer } from '../generated-parser/CypherCmdLexer';
 import {
-  CharStreams,
-  CommonTokenStream,
-  ParserRuleContext,
-  TerminalNode,
-} from 'antlr4';
-import {
-  default as CypherCmdLexer,
-  default as CypherLexer,
-} from '../generated-parser/CypherCmdLexer';
-import CypherCmdParser, {
   ArrowLineContext,
   BooleanLiteralContext,
   ClauseContext,
@@ -30,6 +22,7 @@ import CypherCmdParser, {
 } from '../generated-parser/CypherCmdParser';
 import CypherCmdParserVisitor from '../generated-parser/CypherCmdParserVisitor';
 import {
+  getParseTreeAndTokens,
   isComment,
   wantsSpaceAfter,
   wantsSpaceBefore,
@@ -369,12 +362,7 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
 }
 
 export function formatQuery(query: string) {
-  const inputStream = CharStreams.fromString(query);
-  const lexer = new CypherLexer(inputStream);
-  const tokens = new CommonTokenStream(lexer);
-  const parser = new CypherCmdParser(tokens);
-  parser.buildParseTrees = true;
-  const tree = parser.statementsOrCommands();
+  const { tree, tokens } = getParseTreeAndTokens(query);
   const visitor = new TreePrintVisitor(tokens);
   return visitor.format(tree);
 }
