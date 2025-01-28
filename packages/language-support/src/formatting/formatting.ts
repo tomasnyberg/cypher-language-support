@@ -22,6 +22,7 @@ import CypherCmdParser, {
   MergeClauseContext,
   NodePatternContext,
   NumberLiteralContext,
+  ParameterContext,
   PropertyContext,
   RelationshipPatternContext,
   RightArrowContext,
@@ -52,13 +53,13 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
     super();
   }
 
-  getTargetToken= (): number => {
+  getTargetToken = (): number => {
     return this.targetToken;
-  }
+  };
 
   setTargetToken = (targetToken: number): void => {
     this.targetToken = targetToken;
-  }
+  };
 
   format = (root: StatementsOrCommandsContext) => {
     this.visit(root);
@@ -205,11 +206,11 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
         this.addSpace();
       }
     }
-    
+
     if (node.symbol.type === CypherCmdLexer.EOF) {
       return;
     }
-    if(node.symbol.tokenIndex === this.targetToken) {
+    if (node.symbol.tokenIndex === this.targetToken) {
       this.cursorPos = this.buffer.join('').length;
     }
     if (wantsToBeUpperCase(node)) {
@@ -217,7 +218,7 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
     } else {
       this.buffer.push(node.getText());
     }
-    
+
     if (wantsSpaceAfter(node)) {
       this.addSpace();
     }
@@ -242,11 +243,11 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
     if (options?.upperCase) {
       result = result.toUpperCase();
     }
-    if(node.symbol.tokenIndex === this.targetToken) {
+    if (node.symbol.tokenIndex === this.targetToken) {
       this.cursorPos = this.buffer.join('').length;
     }
     this.buffer.push(result);
-   
+
     this.addCommentsAfter(node);
   };
 
@@ -287,6 +288,13 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
     this.handleInnerPatternContext(ctx);
     this.visit(ctx.RPAREN());
   };
+
+  visitParameter = (ctx: ParameterContext) => {
+    this.visitTerminalRaw(ctx.DOLLAR());
+    this.visit(ctx.parameterName());
+  };
+
+  // Add visit subquery clause
 
   visitRelationshipPattern = (ctx: RelationshipPatternContext) => {
     this.visitIfNotNull(ctx.leftArrow());
@@ -393,64 +401,63 @@ interface FormattingResultWithCursor {
 }
 
 export function formatQuery(query: string): string;
-export function formatQuery(query: string, cursorPosition: number): FormattingResultWithCursor;
-export function formatQuery(query: string, cursorPosition?: number): string | FormattingResultWithCursor {
+export function formatQuery(
+  query: string,
+  cursorPosition: number,
+): FormattingResultWithCursor;
+export function formatQuery(
+  query: string,
+  cursorPosition?: number,
+): string | FormattingResultWithCursor {
   const inputStream = CharStreams.fromString(query);
   const lexer = new CypherLexer(inputStream);
   const tokens = new CommonTokenStream(lexer);
-  tokens.fill()
+  tokens.fill();
   const parser = new CypherCmdParser(tokens);
   parser.buildParseTrees = true;
   const tree = parser.statementsOrCommands();
   const visitor = new TreePrintVisitor(tokens);
-  
-  if (!cursorPosition) {
+  if (cursorPosition === undefined) {
     const result = visitor.format(tree);
     return result;
   }
-
-  if (query.length === cursorPosition
-    || cursorPosition === 0
-  ) {
+  if (cursorPosition >= query.length || cursorPosition === 0) {
     const result = visitor.format(tree);
     return {
       formattedString: result,
-      newCursorPos: cursorPosition === 0 ? 0 : result.length
-    }
+      newCursorPos: cursorPosition === 0 ? 0 : result.length,
+    };
   }
 
   let currentPos = cursorPosition;
-  let backOfLine = 0
+  let backOfLine = 0;
   // If cursor is at space
-  
-if (query.at(currentPos - 1) !== ' ' && query.at(currentPos - 1) !== '\n') {
-  currentPos--;
-  backOfLine = 1;
-} else {
-  while (query.at(currentPos) === ' ') {
-    currentPos++;
-  }
-  
-  while (query.at(currentPos) === ' ' || query.at(currentPos) === '\n') {
+
+  if (query.at(currentPos - 1) !== ' ' && query.at(currentPos - 1) !== '\n') {
     currentPos--;
     backOfLine = 1;
-  }
-}
+  } else {
+    while (query.at(currentPos) === ' ') {
+      currentPos++;
+    }
 
-  
-  const targetToken = tokens.tokens.find(token => {
+    while (query.at(currentPos) === ' ' || query.at(currentPos) === '\n') {
+      currentPos--;
+      backOfLine = 1;
+    }
+  }
+
+  const targetToken = tokens.tokens.find((token) => {
     const start = token.start;
     const stop = token.stop;
     return currentPos >= start && currentPos <= stop;
   });
-  const relativePosition = currentPos - targetToken.start
-  
-  visitor.setTargetToken(targetToken.tokenIndex)
+  const relativePosition = currentPos - targetToken.start;
+
+  visitor.setTargetToken(targetToken.tokenIndex);
   const result = visitor.format(tree);
   return {
     formattedString: result,
-    newCursorPos: (visitor.cursorPos + relativePosition) + backOfLine
+    newCursorPos: visitor.cursorPos + relativePosition + backOfLine,
   };
 }
-
-
