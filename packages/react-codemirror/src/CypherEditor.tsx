@@ -100,6 +100,7 @@ export interface CypherEditorProps {
   featureFlags?: {
     consoleCommands?: boolean;
     signatureInfoOnAutoCompletions?: boolean;
+    format?: boolean;
   };
   /**
    * The schema to use for autocompletion and linting.
@@ -211,26 +212,6 @@ const executeKeybinding = (
       },
     };
 
-    keybindings['Ctrl-f'] = {
-      key: 'Ctrl-f',
-      mac: 'Ctrl-f',
-      preventDefault: true,
-      run: (view: EditorView) => {
-        const doc = view.state.doc.toString();
-        const {formattedString, newCursorPos} = formatQuery(doc, view.state.selection.main.anchor);
-        view.dispatch({
-          changes: {
-            from: 0,
-            to: doc.length,
-            insert: formattedString,
-          },
-          selection: {anchor: newCursorPos}
-        });
-
-        return true;
-      },
-    };
-
     if (!newLineOnEnter) {
       keybindings['Enter'] = {
         key: 'Enter',
@@ -295,20 +276,26 @@ export class CypherEditor extends Component<
   editorView: React.MutableRefObject<EditorView> = createRef();
   private schemaRef: React.MutableRefObject<CypherConfig> = createRef();
 
+  /**
+   * Format query code
+   */
   format() {
-
-    // Refactor
-    const currentView = this.editorView.current
-    const doc = currentView.state.doc.toString();
-    const {formattedString, newCursorPos} = formatQuery(doc, currentView.state.selection.main.anchor);
-    currentView.dispatch({
-      changes: {
-        from: 0,
-        to: doc.length,
-        insert: formattedString
-      },
-      selection: {anchor: newCursorPos}
-    });
+    if (this.props.featureFlags.format) {
+      const currentView = this.editorView.current;
+      const doc = currentView.state.doc.toString();
+      const { formattedString, newCursorPos } = formatQuery(
+        doc,
+        currentView.state.selection.main.anchor,
+      );
+      currentView.dispatch({
+        changes: {
+          from: 0,
+          to: doc.length,
+          insert: formattedString,
+        },
+        selection: { anchor: newCursorPos },
+      });
+    }
   }
 
   /**
@@ -387,6 +374,7 @@ export class CypherEditor extends Component<
       showSignatureTooltipBelow,
       featureFlags: {
         consoleCommands: true,
+        format: true,
         ...featureFlags,
       },
       useLightVersion: false,
@@ -417,6 +405,18 @@ export class CypherEditor extends Component<
           }),
         ]
       : [];
+      this.props.featureFlags.format = true    
+    if (this.props.featureFlags.format) {
+      extraKeybindings.push({
+        key: 'Ctrl-Shift-f',
+        mac: 'Alt-Shift-f',
+        preventDefault: true,
+        run: () => {
+          this.format()
+          return true;
+        },
+      })
+    }
 
     this.editorState.current = EditorState.create({
       extensions: [
