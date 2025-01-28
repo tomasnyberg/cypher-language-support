@@ -22,7 +22,6 @@ import CypherCmdParser, {
   MergeClauseContext,
   NodePatternContext,
   NumberLiteralContext,
-  ParameterContext,
   PropertyContext,
   RelationshipPatternContext,
   RightArrowContext,
