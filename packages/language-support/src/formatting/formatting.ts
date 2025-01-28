@@ -437,33 +437,20 @@ export function formatQuery(
     };
   }
 
-  let currentPos = cursorPosition;
-  let backOfLine = 0;
-  // If cursor is at space
-
-  if (query.at(currentPos - 1) !== ' ' && query.at(currentPos - 1) !== '\n') {
-    currentPos--;
-    backOfLine = 1;
-  } else {
-    while (query.at(currentPos) === ' ') {
-      currentPos++;
+  let targetToken = tokens.tokens[0];
+  for (const token of tokens.tokens) {
+    if (token.channel === 0) {
+      targetToken = token;
     }
-
-    while (query.at(currentPos) === ' ' || query.at(currentPos) === '\n') {
-      currentPos--;
-      backOfLine = 1;
+    if (cursorPosition >= token.start && cursorPosition <= token.stop) {
+      break;
     }
   }
-
-  const targetToken = tokens.tokens.find((token) => {
-    return currentPos >= token.start && currentPos <= token.stop;
-  });
-  const relativePosition = currentPos - targetToken.start;
-
+  const relativePosition = cursorPosition - targetToken.start;
   visitor.setTargetToken(targetToken.tokenIndex);
   const result = visitor.format(tree);
   return {
     formattedString: result,
-    newCursorPos: visitor.cursorPos + relativePosition + backOfLine,
+    newCursorPos: visitor.cursorPos + relativePosition,
   };
 }
