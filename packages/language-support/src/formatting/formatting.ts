@@ -31,6 +31,7 @@ import CypherCmdParser, {
 } from '../generated-parser/CypherCmdParser';
 import CypherCmdParserVisitor from '../generated-parser/CypherCmdParserVisitor';
 import {
+  findTargetToken,
   is_comment,
   wantsSpaceAfter,
   wantsSpaceBefore,
@@ -417,6 +418,7 @@ export function formatQuery(
   query: string,
   cursorPosition?: number,
 ): string | FormattingResultWithCursor {
+  
   const inputStream = CharStreams.fromString(query);
   const lexer = new CypherLexer(inputStream);
   const tokens = new CommonTokenStream(lexer);
@@ -425,6 +427,7 @@ export function formatQuery(
   parser.buildParseTrees = true;
   const tree = parser.statementsOrCommands();
   const visitor = new TreePrintVisitor(tokens);
+
   if (cursorPosition === undefined) {
     const result = visitor.format(tree);
     return result;
@@ -437,15 +440,8 @@ export function formatQuery(
     };
   }
 
-  let targetToken = tokens.tokens[0];
-  for (const token of tokens.tokens) {
-    if (token.channel === 0) {
-      targetToken = token;
-    }
-    if (cursorPosition >= token.start && cursorPosition <= token.stop) {
-      break;
-    }
-  }
+  const targetToken = findTargetToken(tokens.tokens, cursorPosition)
+  
   const relativePosition = cursorPosition - targetToken.start;
   visitor.setTargetToken(targetToken.tokenIndex);
   const result = visitor.format(tree);
