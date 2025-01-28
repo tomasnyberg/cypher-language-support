@@ -23,6 +23,7 @@ import {
 import CypherCmdParserVisitor from '../generated-parser/CypherCmdParserVisitor';
 import {
   getParseTreeAndTokens,
+  handleMergeClause,
   isComment,
   wantsSpaceAfter,
   wantsSpaceBefore,
@@ -308,23 +309,7 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
 
   // Handled separately because we want ON CREATE before ON MATCH
   visitMergeClause = (ctx: MergeClauseContext) => {
-    this.visit(ctx.MERGE());
-    this.visit(ctx.pattern());
-    const mergeActions = ctx
-      .mergeAction_list()
-      .map((action, index) => ({ action, index }))
-      .sort((a, b) => {
-        if (a.action.CREATE() && b.action.MATCH()) {
-          return -1;
-        } else if (a.action.MATCH() && b.action.CREATE()) {
-          return 1;
-        }
-        return a.index - b.index;
-      })
-      .map(({ action }) => action);
-    mergeActions.forEach((action) => {
-      this.visit(action);
-    });
+    handleMergeClause(ctx, (node) => this.visit(node));
   };
 
   // Handled separately because it wants indentation
