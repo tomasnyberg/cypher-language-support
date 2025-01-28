@@ -456,9 +456,7 @@ export function formatQuery(
   }
 
   const targetToken = tokens.tokens.find((token) => {
-    const start = token.start;
-    const stop = token.stop;
-    return currentPos >= start && currentPos <= stop;
+    return currentPos >= token.start && currentPos <= token.stop;
   });
   const relativePosition = currentPos - targetToken.start;
 
