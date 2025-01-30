@@ -70,6 +70,7 @@ function isSymbolicName(node: TerminalNode): boolean {
     node.parentCtx instanceof EscapedSymbolicNameStringContext
   );
 }
+
 export function getParseTreeAndTokens(query: string) {
   const inputStream = CharStreams.fromString(query);
   const lexer = new CypherCmdLexer(inputStream);
@@ -78,4 +79,20 @@ export function getParseTreeAndTokens(query: string) {
   parser.buildParseTrees = true;
   const tree = parser.statementsOrCommands();
   return { tree, tokens };
+}
+
+export function findTargetToken(
+  tokens: Token[],
+  cursorPosition: number,
+): Token | false {
+  let targetToken: Token;
+  for (const token of tokens) {
+    if (token.channel === 0) {
+      targetToken = token;
+    }
+    if (cursorPosition >= token.start && cursorPosition <= token.stop) {
+      return targetToken;
+    }
+  }
+  return false;
 }
