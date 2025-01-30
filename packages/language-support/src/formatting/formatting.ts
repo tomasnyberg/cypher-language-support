@@ -375,6 +375,6 @@ export function formatQuery(query: string) {
   const parser = new CypherCmdParser(tokens);
   parser.buildParseTrees = true;
   const tree = parser.statementsOrCommands();
-  const visitor = new TreePrintVisitor(tokens);
+  const visitor = new TreePrintVisitor(tokens); // Test comment
   return visitor.format(tree);
 }
