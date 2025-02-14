@@ -43,7 +43,11 @@ const fileContent = fs.readFileSync(filePath, 'utf-8');
 const queries: string[] = JSON.parse(fileContent);
 let badQueries = 0;
 let successful = 0;
-for (const query of queries) {
+for (let i = 0; i < queries.length; i++) {
+  if (i % 1000 === 0) {
+    console.log(`Processed ${i} queries out of ${queries.length}`);
+  }
+  const query = queries[i];
   try {
     const inputStream = CharStreams.fromString(query);
     const lexer = new CypherCmdLexer(inputStream);
@@ -60,6 +64,8 @@ for (const query of queries) {
     verifyFormatting(query);
     successful++;
   } catch (e) {
+    console.log(`Error in query ${i}`);
+    console.log(query);
     console.log(e.message);
   }
 }
