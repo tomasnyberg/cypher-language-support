@@ -16,7 +16,16 @@ function verifyFormatting(query: string): void {
   // AST integrity check
   if (formattedStandardized !== queryStandardized) {
     throw new Error(
-      `Standardized query does not match standardized formatted query`,
+      `Standardized query does not match standardized formatted query,
+---------   QUERY BEFORE START  ------------
+${query}
+---------   QUERY BEFORE END    ----------
+
+---------   QUERY FORMATTED START  ------------
+${formatted}
+
+---------   QUERY FORMATTED END    ----------
+`,
     );
   }
   // Idempotency check
@@ -34,7 +43,6 @@ const fileContent = fs.readFileSync(filePath, 'utf-8');
 const queries: string[] = JSON.parse(fileContent);
 let badQueries = 0;
 let successful = 0;
-const reasons = new Map<string, number>();
 for (const query of queries) {
   try {
     const inputStream = CharStreams.fromString(query);
@@ -52,14 +60,7 @@ for (const query of queries) {
     verifyFormatting(query);
     successful++;
   } catch (e) {
-    let reason = e.message.split('near ')[1];
-    reasons.set(reason, (reasons.get(reason) || 0) + 1);
-    console.log("\n-------------------\n");
-    console.log(e);
     console.log(e.message);
-    console.log("\n");
-    console.log(query);
-    console.log("\n");
   }
 }
 
