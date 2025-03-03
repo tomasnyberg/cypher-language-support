@@ -67,7 +67,6 @@ import {
   CommentChunk,
   findTargetToken,
   getParseTreeAndTokens,
-  handleMergeClause,
   isComment,
   RegularChunk,
   wantsToBeConcatenated,
@@ -949,13 +948,15 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
 
   // Handled separately because we want ON CREATE before ON MATCH
   visitMergeClause = (ctx: MergeClauseContext) => {
-    handleMergeClause(
-      ctx,
-      (node) => this.visit(node),
-      () => this.startGroup(),
-      (id) => this.endGroup(id),
-      () => this.avoidBreakBetween(),
-    );
+    this.visit(ctx.MERGE());
+    this.avoidBreakBetween();
+    const patternGrp = this.startGroup();
+    this.visit(ctx.pattern());
+    this.endGroup(patternGrp);
+    const n = ctx.mergeAction_list().length;
+    for (let i = 0; i < n; i++) {
+      this.visit(ctx.mergeAction(i));
+    }
   };
 
   // Handled separately because it wants indentation

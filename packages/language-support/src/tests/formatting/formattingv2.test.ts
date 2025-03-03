@@ -24,6 +24,8 @@ function verifyFormatting(query: string, expected: string): void {
 }
 
 describe('styleguide examples', () => {
+  // NOTE: We do not swap the order of ON MATCH and ON CREATE since
+  // we feel that it falls outside the responsbilities of a formatter.
   test('on match indentation example', () => {
     const query = `MERGE (n) ON CREATE SET n.prop = 0
 MERGE (a:A)-[:T]->(b:B)
@@ -33,8 +35,8 @@ RETURN a.prop`;
     const expected = `MERGE (n)
   ON CREATE SET n.prop = 0
 MERGE (a:A)-[:T]->(b:B)
-  ON CREATE SET a.name = 'me'
   ON MATCH SET b.name = 'you'
+  ON CREATE SET a.name = 'me'
 RETURN a.prop`;
     verifyFormatting(query, expected);
   });
@@ -144,8 +146,8 @@ RETURN a.prop                     // Return the 'prop' of 'a'
 MERGE (n)
   ON CREATE SET n.prop = 0 // Ensure 'n' exists and initialize 'prop' to 0 if created
 MERGE (a:A)-[:T]->(b:B) // Create or match a relationship from 'a:A' to 'b:B'
-  ON CREATE SET a.name = 'me' // If 'a' is created, set its 'name' to 'me'
   ON MATCH SET b.name = 'you' // If 'b' already exists, set its 'name' to 'you'
+  ON CREATE SET a.name = 'me' // If 'a' is created, set its 'name' to 'me'
 RETURN a.prop // Return the 'prop' of 'a'`.trim();
     verifyFormatting(inlinecomments, expected);
   });
