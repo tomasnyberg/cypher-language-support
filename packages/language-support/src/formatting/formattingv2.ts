@@ -41,6 +41,7 @@ import {
   NumberLiteralContext,
   ParameterContext,
   ParenthesizedExpressionContext,
+  ParenthesizedPathContext,
   PathLengthContext,
   PatternContext,
   PatternListContext,
@@ -877,6 +878,16 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
     const whereClauseGrp = this.startGroup();
     this.visit(ctx.expression());
     this.endGroup(whereClauseGrp);
+  };
+
+  visitParenthesizedPath = (ctx: ParenthesizedPathContext) => {
+    if (!ctx.quantifier()) {
+      this.visitChildren(ctx);
+      return;
+    }
+    const pathGrp = this.startGroup();
+    this.visitChildren(ctx);
+    this.endGroup(pathGrp);
   };
 
   visitParenthesizedExpression = (ctx: ParenthesizedExpressionContext) => {

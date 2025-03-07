@@ -906,4 +906,70 @@ LIMIT 10`.trimStart();
     const expected = query;
     verifyFormatting(query, expected);
   });
+
+  test('should prefer to split on QPPs 1', () => {
+    const query = `MATCH pth = (u:User)-[:USER_EVENT]->(e:GeneratedQuery)
+            (()--(:GeneratedQuery))*
+            (()-->(:RanCommand)-->(:RanCypher))+
+RETURN pth
+ORDER BY length(pth) DESC
+LIMIT 10000`;
+    const expected = `
+MATCH pth = (u:User)-[:USER_EVENT]->(e:GeneratedQuery) (()--(:GeneratedQuery))*
+            (()-->(:RanCommand)-->(:RanCypher))+(()--(:GeneratedQuery))*
+            (()-->(:RanCommand)-->(:RanCypher))+
+RETURN pth ORDER BY length(pth) DESC
+LIMIT 10000`.trimStart();
+    verifyFormatting(query, expected);
+  });
+
+  test('should prefer to split on QPPs 2', () => {
+    const query = `
+MATCH pth = (u:User)-[:USER_EVENT]->(e:GeneratedQuery) (()--(:GeneratedQuery))*
+            (()-->(:RanCommand)-->(:RanCypher))+(()--(:GeneratedQuery))*
+            (()-->(:RanCommand)-->(:RanCypher))+(()--(:GeneratedQuery))*(()-->
+            (:RanCommand)-->(:RanCypher))+
+RETURN pth ORDER BY length(pth) DESC
+LIMIT 10000`;
+    const expected = `
+MATCH pth = (u:User)-[:USER_EVENT]->(e:GeneratedQuery)
+            (()--(:GeneratedQuery))*
+            (()-->(:RanCommand)-->(:RanCypher))+
+            (()--(:GeneratedQuery))*
+            (()-->(:RanCommand)-->(:RanCypher))+
+            (()--(:GeneratedQuery))*
+            (()-->(:RanCommand)-->(:RanCypher))+
+RETURN pth
+ORDER BY length(pth) DESC
+LIMIT 10000`.trimStart();
+    verifyFormatting(query, expected);
+  });
+
+  test('should prefer to split on QPPs 3', () => {
+    const query = `MATCH pth = (u:User)-[:USER_EVENT]->(e:GeneratedQuery)
+            (
+              ()--(:GeneratedQuery)
+            )*
+            (
+              ()-->(:RanCommand)-->(:RanCypher)
+            )+
+            (
+              ()--(:GeneratedQuery)
+            )*
+            (
+              ()-->(:RanCommand)-->(:RanCypher)
+            )+
+RETURN pth
+ORDER BY length(pth) DESC
+LIMIT 10000`;
+    const expected = `
+MATCH pth = (u:User)-[:USER_EVENT]->(e:GeneratedQuery) 
+            (()--(:GeneratedQuery))*
+            (()-->(:RanCommand)-->(:RanCypher))+
+            (()--(:GeneratedQuery))*
+            (()-->(:RanCommand)-->(:RanCypher))+
+RETURN pth ORDER BY length(pth) DESC
+LIMIT 10000`.trimStart();
+    verifyFormatting(query, expected);
+  });
 });
