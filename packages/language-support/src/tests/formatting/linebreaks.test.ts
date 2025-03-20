@@ -569,7 +569,7 @@ WHERE p.name STARTS WITH 'A' OR
       p.salary > 50000 OR
       p.experience > 10 OR
       p.position = 'Manager'
-RETURN p`;
+RETURN p`.trimStart();
     verifyFormatting(query, expected);
   })
 });

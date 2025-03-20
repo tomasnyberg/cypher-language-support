@@ -425,7 +425,7 @@ function chunkListToChoices(chunkList: Chunk[]): Choice[] {
     const chunk = chunkList[i];
     const index = i;
     groups = groups.concat(chunk.groupsStarting);
-    if (chunk.text === 'a') {
+    if (chunk.text === 'a' || (chunk.text == 'p.name' && chunk.groupsStarting.length === 2)) {
       groups[0].length = 100;
     }
     for (let i = 0; i < chunk.groupsEnding; i++) {
