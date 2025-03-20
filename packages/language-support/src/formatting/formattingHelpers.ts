@@ -50,11 +50,16 @@ export interface ChunkIndentation {
   align: AlignIndentationOptions;
 }
 
+export interface Group {
+  id: number;
+  length: number;
+}
+
 export interface BaseChunk {
   isCursor?: boolean;
   doubleBreak?: true;
   text: string;
-  groupsStarting: number;
+  groupsStarting: Group[];
   groupsEnding: number;
   indentation: ChunkIndentation;
 }
@@ -86,7 +91,7 @@ export const initialIndentation: ChunkIndentation = {
 export const emptyChunk: RegularChunk = {
   type: 'REGULAR',
   text: '',
-  groupsStarting: 0,
+  groupsStarting: [],
   groupsEnding: 0,
   indentation: { ...initialIndentation },
 };

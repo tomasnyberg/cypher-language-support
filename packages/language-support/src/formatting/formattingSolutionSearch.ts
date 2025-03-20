@@ -227,7 +227,7 @@ function getNeighbourState(curr: State, choice: Choice, split: Split): State {
       : thisWordEnd - splitLength;
   const overflowingCount = Math.max(0, endWithoutCommentAndSplit - MAX_COL);
 
-  for (let i = 0; i < choice.left.groupsStarting; i++) {
+  for (let i = 0; i < choice.left.groupsStarting.length; i++) {
     nextGroups.push({
       align: actualColumn,
       breakCost: Math.pow(10, nextGroups.length + 1),
@@ -345,7 +345,7 @@ function bestFirstSolnSearch(
 
 // Used for debugging only; it's very convenient to know where groups start and end
 function addGroupStart(buffer: string[], decision: Decision) {
-  for (let i = 0; i < decision.left.groupsStarting; i++) {
+  for (let i = 0; i < decision.left.groupsStarting.length; i++) {
     buffer.push('[');
   }
 }
