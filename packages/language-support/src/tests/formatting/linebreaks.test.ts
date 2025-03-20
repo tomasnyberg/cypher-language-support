@@ -1116,4 +1116,16 @@ MATCH (n)
 RETURN m;`.trimStart();
     verifyFormatting(query, expected);
   });
+
+  test('long return list', () => {
+    const query = `MATCH (n)
+RETURN a AS firstItem, b as secondItem, c as thirdItem, d as fourthItem`;
+    console.log(formatQuery(query));
+    const expected = `MATCH (n)
+RETURN a AS firstItem,
+       b as secondItem,
+       c as thirdItem,
+       d as fourthItem`;
+    verifyFormatting(query, expected);
+  });
 });
