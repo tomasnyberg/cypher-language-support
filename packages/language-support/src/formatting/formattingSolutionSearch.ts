@@ -403,13 +403,17 @@ function determineSplits(chunk: Chunk, nextChunk: Chunk): Split[] {
 }
 
 function chunkListToChoices(chunkList: Chunk[]): Choice[] {
-  return chunkList.map((chunk, index) => {
-    return {
+  const result: Choice[] = [];
+  for (let i = 0; i < chunkList.length; i++) {
+    const chunk = chunkList[i];
+    const index = i;
+    result.push({
       left: chunk,
       right: index === chunkList.length - 1 ? emptyChunk : chunkList[index + 1],
       possibleSplitChoices: determineSplits(chunk, chunkList[index + 1]),
-    };
-  });
+    });
+  }
+  return result;
 }
 
 export function buffersToFormattedString(
