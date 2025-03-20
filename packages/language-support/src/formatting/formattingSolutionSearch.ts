@@ -214,12 +214,14 @@ function getNeighbourState(curr: State, choice: Choice, split: Split): State {
     choice.left,
     nextIndentationState,
   );
+  let flag = false;
   let splitType = split.splitType;
-  if (curr.activeGroups.length > 0) {
+  if (nextGroups.length - choice.left.groupsEnding > 0) {
     const stateString = stateToString(curr)
-    const last = curr.activeGroups.at(-1);
+    const last = nextGroups.at(-(1 + choice.left.groupsEnding));
     if (last.align + last.size > MAX_COL) {
       splitType = '\n';
+      flag = true;
     }
   }
   const isBreak = splitType === '\n' || splitType === '\n\n';
@@ -272,7 +274,7 @@ function getNeighbourState(curr: State, choice: Choice, split: Split): State {
         indentation: finalIndentation,
         left: choice.left,
         right: choice.right,
-        chosenSplit: split,
+        chosenSplit: flag ? {splitType: '\n', cost: 0}: split,
       },
     },
   };
