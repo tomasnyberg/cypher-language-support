@@ -544,6 +544,34 @@ RETURN person.name AS name, COUNT {
     const expected = query;
     verifyFormatting(query, expected);
   });
+
+  test('long return list', () => {
+    const query = `MATCH (n)
+RETURN a AS firstItem, b as secondItem, c as thirdItem, d as fourthItem`;
+    console.log(formatQuery(query));
+    const expected = `MATCH (n)
+RETURN a AS firstItem,
+       b AS secondItem,
+       c AS thirdItem,
+       d AS fourthItem`;
+    verifyFormatting(query, expected);
+  });
+
+  test('long or', () => {
+    const query = q1;
+    console.log(formatQuery(query));
+    const expected = `
+MATCH (p:Person)
+WHERE p.name STARTS WITH 'A' OR
+      p.name STARTS WITH 'B' OR
+      p.name STARTS WITH 'C' OR
+      p.age > 30 OR
+      p.salary > 50000 OR
+      p.experience > 10 OR
+      p.position = 'Manager'
+RETURN p`;
+    verifyFormatting(query, expected);
+  })
 });
 
 describe('tests for respcecting user line breaks', () => {
@@ -1114,18 +1142,6 @@ RETURN n;
 
 MATCH (n)
 RETURN m;`.trimStart();
-    verifyFormatting(query, expected);
-  });
-
-  test('long return list', () => {
-    const query = `MATCH (n)
-RETURN a AS firstItem, b as secondItem, c as thirdItem, d as fourthItem`;
-    console.log(formatQuery(query));
-    const expected = `MATCH (n)
-RETURN a AS firstItem,
-       b AS secondItem,
-       c AS thirdItem,
-       d AS fourthItem`;
     verifyFormatting(query, expected);
   });
 });
