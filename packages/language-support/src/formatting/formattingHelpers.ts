@@ -50,7 +50,7 @@ export interface ChunkIndentation {
   align: AlignIndentationOptions;
 }
 
-export interface Group {
+export interface ChunkGroup {
   id: number;
   length: number;
 }
@@ -59,7 +59,7 @@ export interface BaseChunk {
   isCursor?: boolean;
   doubleBreak?: true;
   text: string;
-  groupsStarting: Group[];
+  groupsStarting: ChunkGroup[];
   groupsEnding: number;
   indentation: ChunkIndentation;
 }

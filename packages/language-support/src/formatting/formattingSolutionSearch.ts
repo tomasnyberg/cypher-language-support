@@ -3,6 +3,7 @@ import CypherCmdLexer from '../generated-parser/CypherCmdLexer';
 import {
   AlignIndentationOptions,
   Chunk,
+  ChunkGroup,
   ChunkIndentation,
   emptyChunk,
   isCommentBreak,
@@ -404,9 +405,15 @@ function determineSplits(chunk: Chunk, nextChunk: Chunk): Split[] {
 
 function chunkListToChoices(chunkList: Chunk[]): Choice[] {
   const result: Choice[] = [];
+  let groups: ChunkGroup[] = [];
   for (let i = 0; i < chunkList.length; i++) {
+    todo: make the a chunk longer 
     const chunk = chunkList[i];
     const index = i;
+    groups = groups.concat(chunk.groupsStarting);
+    for (let i = 0; i < chunk.groupsEnding; i++) {
+      groups.pop();
+    }
     result.push({
       left: chunk,
       right: index === chunkList.length - 1 ? emptyChunk : chunkList[index + 1],
