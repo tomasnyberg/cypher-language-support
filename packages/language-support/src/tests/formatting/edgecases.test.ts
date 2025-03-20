@@ -776,17 +776,29 @@ RETURN 5 +
       CASE
         WHEN EXISTS {
           MATCH (person)-[:HAS_DOG]->(dog:Dog)
-          WHERE person.name = 'Chris' OR person.name = 'Chris' OR
-                person.name = 'Chris' OR person.name = 'Chris' OR
-                person.name = 'Chris' OR person.name = 'Chris'
+          WHERE person.name = 'Chris' OR
+                person.name = 'Chris' OR
+                person.name = 'Chris' OR
+                person.name = 'Chris' OR
+                person.name = 'Chris' OR
+                person.name = 'Chris'
           WITH dog
           WHERE dog.name = 'Ozzy'
         } THEN 'Relationship'
         WHEN (n {prop: 42}) THEN
           CASE
-            WHEN (n)--() OR (n)--() OR (n)--() OR (n)--() OR (n)--() OR
-                 (n)--() OR (n)--() OR (n)--() OR (n)--() OR (n)--() OR
-                 (n)--() OR (n)--() THEN 'Relationship'
+            WHEN (n)--() OR
+                 (n)--() OR
+                 (n)--() OR
+                 (n)--() OR
+                 (n)--() OR
+                 (n)--() OR
+                 (n)--() OR
+                 (n)--() OR
+                 (n)--() OR
+                 (n)--() OR
+                 (n)--() OR
+                 (n)--() THEN 'Relationship'
             WHEN (n {prop: 42}) THEN
               CASE
                 WHEN EXISTS {
