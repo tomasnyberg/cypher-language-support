@@ -83,10 +83,10 @@ import CypherCmdParserVisitor from '../generated-parser/CypherCmdParserVisitor';
 import {
   AlignIndentationOptions,
   Chunk,
+  ChunkGroup,
   CommentChunk,
   findTargetToken,
   getParseTreeAndTokens,
-  Group,
   initialIndentation,
   isComment,
   RegularChunk,
@@ -111,9 +111,9 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
   cursorPos = 0;
   groupID = 0;
   // Groups that are currently open
-  groupStack: Group[] = [];
+  groupStack: ChunkGroup[] = [];
   // Groups that are waiting to be attached to the next chunk
-  pendingStartGroupStack: Group[] = [];
+  pendingStartGroupStack: ChunkGroup[] = [];
   groupsToEndOnBreak: number[] = [];
 
   constructor(private tokenStream: CommonTokenStream) {
@@ -281,7 +281,7 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
   startGroupAlsoOnComment = (): number => {
     if (this.lastInCurrentBuffer().type === 'COMMENT') {
       const idx = this.getFirstNonCommentIdx();
-      const newGroup: Group = { id: this.groupID, length: 0 };
+      const newGroup: ChunkGroup = { id: this.groupID, length: 0 };
       this.currentBuffer()
         .at(idx + 1)
         .groupsStarting.push(newGroup);
