@@ -34,6 +34,7 @@ interface Choice {
 interface Group {
   align: number;
   breakCost: number;
+  size: number;
 }
 
 interface Decision {
@@ -202,10 +203,6 @@ function stateToString(state: State) {
 }
 
 function getNeighbourState(curr: State, choice: Choice, split: Split): State {
-  const isBreak = split.splitType === '\n' || split.splitType === '\n\n';
-  // A state has indentation, which is applied after a hard line break. However, if it has an
-  // active group and we decided to split within a line, the alignment of that group takes precedence
-  // over the base indentation.
   const nextGroups = [...curr.activeGroups];
   const nextIndentationState = deriveNextIndentationState(
     choice.left.indentation,
@@ -217,9 +214,21 @@ function getNeighbourState(curr: State, choice: Choice, split: Split): State {
     choice.left,
     nextIndentationState,
   );
+  let splitType = split.splitType;
+  if (curr.activeGroups.length > 0) {
+    const stateString = stateToString(curr)
+    const last = curr.activeGroups.at(-1);
+    if (last.align + last.size > MAX_COL) {
+      splitType = '\n';
+    }
+  }
+  const isBreak = splitType === '\n' || splitType === '\n\n';
+  // A state has indentation, which is applied after a hard line break. However, if it has an
+  // active group and we decided to split within a line, the alignment of that group takes precedence
+  // over the base indentation.
 
   const actualColumn = curr.column === 0 ? finalIndentation : curr.column;
-  const splitLength = !isBreak ? split.splitType.length : 0;
+  const splitLength = !isBreak ? splitType.length : 0;
   const thisWordEnd = actualColumn + choice.left.text.length + splitLength;
   // We don't consider comments nor an empty space as overflowing
   const endWithoutCommentAndSplit =
@@ -232,6 +241,7 @@ function getNeighbourState(curr: State, choice: Choice, split: Split): State {
     nextGroups.push({
       align: actualColumn,
       breakCost: Math.pow(10, nextGroups.length + 1),
+      size: choice.left.groupsStarting[i].length,
     });
   }
   for (let i = 0; i < choice.left.groupsEnding; i++) {
@@ -336,7 +346,8 @@ function bestFirstSolnSearch(
       return reconstructBestPath(state);
     }
     const choice = choiceList[state.choiceIndex];
-    for (const split of choice.possibleSplitChoices) {
+    let splits = choice.possibleSplitChoices
+    for (const split of splits) {
       const neighbourState = getNeighbourState(state, choice, split);
       heap.push(neighbourState);
     }
@@ -407,10 +418,12 @@ function chunkListToChoices(chunkList: Chunk[]): Choice[] {
   const result: Choice[] = [];
   let groups: ChunkGroup[] = [];
   for (let i = 0; i < chunkList.length; i++) {
-    todo: make the a chunk longer 
     const chunk = chunkList[i];
     const index = i;
     groups = groups.concat(chunk.groupsStarting);
+    if (chunk.text === 'a') {
+      groups[0].length = 100;
+    }
     for (let i = 0; i < chunk.groupsEnding; i++) {
       groups.pop();
     }
