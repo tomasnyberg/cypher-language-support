@@ -219,7 +219,7 @@ function getNeighbourState(curr: State, choice: Choice, split: Split): State {
   if (nextGroups.length - choice.left.groupsEnding > 0) {
     const stateString = stateToString(curr)
     const last = nextGroups.at(-(1 + choice.left.groupsEnding));
-    if (last.align + last.size > MAX_COL) {
+    if (last.align + last.size > MAX_COL && choice.left.groupsStarting.length === 0) {
       splitType = '\n';
       flag = true;
     }

@@ -1123,9 +1123,9 @@ RETURN a AS firstItem, b as secondItem, c as thirdItem, d as fourthItem`;
     console.log(formatQuery(query));
     const expected = `MATCH (n)
 RETURN a AS firstItem,
-       b as secondItem,
-       c as thirdItem,
-       d as fourthItem`;
+       b AS secondItem,
+       c AS thirdItem,
+       d AS fourthItem`;
     verifyFormatting(query, expected);
   });
 });
