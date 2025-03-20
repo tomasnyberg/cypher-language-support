@@ -305,8 +305,10 @@ RETURN p`;
     (a)-[:ROUTE_TO {distance: "zjisNPKv", duration: "ivAC2TGF"}]->(b),
     (b)-[:ROUTE_TO {distance: "Irogkqf1", duration: "QsCt67v1"}]->(c),
     (c)-[:ROUTE_TO {distance: "Y53yoQwn", duration: "X41tnMDd"}]->(d);`;
-    const expected = `CREATE (a:Location {name: "DXe5KhL3"}), (b:Location {name: "v2BpdkOj"}),
-       (c:Location {name: "Fi5CMJ9Y"}), (d:Location {name: "S31K3X1o"}),
+    const expected = `CREATE (a:Location {name: "DXe5KhL3"}),
+       (b:Location {name: "v2BpdkOj"}),
+       (c:Location {name: "Fi5CMJ9Y"}),
+       (d:Location {name: "S31K3X1o"}),
        (a)-[:ROUTE_TO {distance: "zjisNPKv", duration: "ivAC2TGF"}]->(b),
        (b)-[:ROUTE_TO {distance: "Irogkqf1", duration: "QsCt67v1"}]->(c),
        (c)-[:ROUTE_TO {distance: "Y53yoQwn", duration: "X41tnMDd"}]->(d);`;
