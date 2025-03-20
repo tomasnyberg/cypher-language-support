@@ -249,18 +249,25 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
     return idx;
   };
 
+  popGroup = () => {
+    const popped = this.groupStack.pop();
+    if (this.groupStack.length > 0) {
+      this.groupStack.at(-1).length += popped.length;
+    }
+  };
+
   endGroup = (id: number) => {
     if (this.groupStack.at(-1).id !== id) {
       return;
     }
     const idx = this.getFirstNonCommentIdx();
     this.currentBuffer().at(idx).groupsEnding += 1;
-    this.groupStack.pop();
+    this.popGroup();
   };
 
   removeAllGroups = () => {
     for (let i = 0; i < this.lastInCurrentBuffer().groupsStarting.length; i++) {
-      this.groupStack.pop();
+      this.popGroup();
     }
   };
 
@@ -916,6 +923,10 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
       indentation: { ...initialIndentation },
     };
     this.pendingStartGroupStack = [];
+    // TODO: does not take into account spaces correctly
+    if (this.groupStack.length > 0) {
+      this.groupStack.at(-1).length += text.length;
+    }
     if (node.symbol.tokenIndex === this.targetToken) {
       chunk.isCursor = true;
     }
@@ -957,10 +968,12 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
       indentation: { ...initialIndentation },
     };
     this.pendingStartGroupStack = [];
+    if (this.groupStack.length > 0) {
+      this.groupStack.at(-1).length += text.length;
+    }
     if (node.symbol.tokenIndex === this.targetToken) {
       chunk.isCursor = true;
     }
-
     this.currentBuffer().push(chunk);
     if (!options?.spacingChoice) {
       this.avoidSpaceBetween();
