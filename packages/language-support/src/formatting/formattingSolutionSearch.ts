@@ -219,6 +219,8 @@ function getNeighbourState(curr: State, choice: Choice, split: Split): State {
   if (nextGroups.length - choice.left.groupsEnding > 0) {
     const stateString = stateToString(curr)
     const last = nextGroups.at(-(1 + choice.left.groupsEnding));
+    // TODO: the check for length being 0 will not be right always. this one probably needs
+    // to move somehow?
     if (last.align + last.size > MAX_COL && choice.left.groupsStarting.length === 0) {
       splitType = '\n';
       flag = true;
