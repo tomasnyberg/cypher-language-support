@@ -53,6 +53,7 @@ export interface ChunkIndentation {
 export interface ChunkGroup {
   id: number;
   length: number;
+  notPrettierStyle?: true;
 }
 
 export interface BaseChunk {

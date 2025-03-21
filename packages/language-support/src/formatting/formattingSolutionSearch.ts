@@ -35,6 +35,7 @@ interface Group {
   align: number;
   breakCost: number;
   size: number;
+  nonPrettierStyle: true;
 }
 
 interface Decision {
@@ -221,7 +222,7 @@ function getNeighbourState(curr: State, choice: Choice, split: Split): State {
     const last = nextGroups.at(-(1 + choice.left.groupsEnding));
     // TODO: the check for length being 0 will not be right always. this one probably needs
     // to move somehow?
-    if (last.align + last.size > MAX_COL && choice.left.groupsStarting.length === 0) {
+    if (!last.nonPrettierStyle && last.align + last.size > MAX_COL && choice.left.groupsStarting.length === 0) {
       splitType = '\n';
       flag = true;
     }
@@ -246,6 +247,7 @@ function getNeighbourState(curr: State, choice: Choice, split: Split): State {
       align: actualColumn,
       breakCost: Math.pow(10, nextGroups.length + 1),
       size: choice.left.groupsStarting[i].length,
+      nonPrettierStyle: choice.left.groupsStarting[i].notPrettierStyle,
     });
   }
   for (let i = 0; i < choice.left.groupsEnding; i++) {

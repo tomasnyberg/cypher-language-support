@@ -277,8 +277,12 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
     }
   };
 
-  startGroup = (): number => {
-    const newGroup = { id: this.groupID, length: 0 };
+  startNonPrettierGroup = (): number => {
+    return this.startGroup(true);
+  }
+
+  startGroup = (notPrettierStyle?: true): number => {
+    const newGroup = { id: this.groupID, length: 0, notPrettierStyle };
     this.pendingStartGroupStack.push(newGroup);
     this.groupStack.push(newGroup);
     this.groupID++;
@@ -1110,7 +1114,7 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
   visitNodePattern = (ctx: NodePatternContext) => {
     this.visit(ctx.LPAREN());
     this.avoidBreakBetween();
-    const nodePatternGrp = this.startGroup();
+    const nodePatternGrp = this.startNonPrettierGroup();
     if (ctx.variable() || ctx.labelExpression() || ctx.properties()) {
       this.visitIfNotNull(ctx.variable());
       this.visitIfNotNull(ctx.labelExpression());
