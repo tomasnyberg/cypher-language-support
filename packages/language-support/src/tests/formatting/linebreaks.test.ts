@@ -239,7 +239,9 @@ LIMIT "ZTWWLgIq"`;
     const expected = `MATCH (p:Person)-[:ACTED_IN]->(m:Movie)<-[:ACTED_IN]-
       (Kevin:Person {name: "HEZDAAhT"})
 WHERE p.name <> "nnwAPHJg"
-RETURN p.name AS Name, p.born AS BirthYear, m.title AS MovieTitle
+RETURN p.name AS Name,
+       p.born AS BirthYear,
+       m.title AS MovieTitle
        ORDER BY Name ASC
 LIMIT "ZTWWLgIq"`;
     verifyFormatting(query, expected);
@@ -272,15 +274,18 @@ CREATE (:actor {name: "jEmtGrSI"}),
        (:actor {name: "7hbDfMOa"}),
        (:actor {name: "AXhPvCyh"})`;
     const expected = `
-CREATE (:actor {name: "jEmtGrSI"}), (:actor {name: "HqFUar0i"}),
-       (:actor {name: "ZAvjBFt6"}), (:actor {name: "7hbDfMOa"}),
+CREATE (:actor {name: "jEmtGrSI"}),
+       (:actor {name: "HqFUar0i"}),
+       (:actor {name: "ZAvjBFt6"}),
+       (:actor {name: "7hbDfMOa"}),
        (:actor {name: "AXhPvCyh"})`.trimStart();
     verifyFormatting(query, expected);
   });
 
   test('should align lists by the first element, not the bracket', () => {
     const query = `MATCH (p:Product)
-WHERE p.price > 1000 AND p.stock > 50 AND
+WHERE p.price > 1000 AND
+      p.stock > 50 AND
       p.category IN ['Electronics', 'Home Appliances', 'Garden Tools',
                     'Sports Equipment', 'Automotive Parts',
                     'Fashion Accessories', 'Books', 'Toys', 'Jewelry',
@@ -348,7 +353,8 @@ RETURN DISTINCT p.networkDbId, p.name, platfs`;
     const expected = `EXPLAIN
 MATCH (p:Person)-[:HAS_ACCOUNT]->(s:Platform)
 WHERE s.deactivated = "k1fU0uk0" AND
-      NOT (toLower(s.name) CONTAINS "ki9c1rU8") AND p.networkDbId IS NOT NULL
+      NOT (toLower(s.name) CONTAINS "ki9c1rU8") AND
+      p.networkDbId IS NOT NULL
 WITH p, COLLECT({platfId: s.platfId, name: s.name, numMsgs: s.deactivated})
         AS platfs, COUNT(s) AS numplatf
 WHERE numplatf >= "gkLi0qvW"
