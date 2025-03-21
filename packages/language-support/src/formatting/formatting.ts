@@ -289,10 +289,14 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
     return this.groupID - 1;
   };
 
-  startGroupAlsoOnComment = (): number => {
+  startNonPrettierGroupAlsoOnComment = (): number => {
+    return this.startGroup(true);
+  }
+
+  startGroupAlsoOnComment = (notPrettierStyle?: true): number => {
     if (this.lastInCurrentBuffer().type === 'COMMENT') {
       const idx = this.getFirstNonCommentIdx();
-      const newGroup: ChunkGroup = { id: this.groupID, length: 0 };
+      const newGroup: ChunkGroup = { id: this.groupID, length: 0, notPrettierStyle };
       this.currentBuffer()
         .at(idx + 1)
         .groupsStarting.push(newGroup);
@@ -702,7 +706,7 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
     this.visitIfNotNull(ctx.OPTIONAL());
     this.visit(ctx.MATCH());
     this.avoidBreakBetween();
-    const matchClauseGrp = this.startGroupAlsoOnComment();
+    const matchClauseGrp = this.startNonPrettierGroupAlsoOnComment();
     this.visitIfNotNull(ctx.matchMode());
     this.visit(ctx.patternList());
     this.endGroup(matchClauseGrp);
@@ -1545,7 +1549,7 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
   visitMergeClause = (ctx: MergeClauseContext) => {
     this.visit(ctx.MERGE());
     this.avoidBreakBetween();
-    const patternGrp = this.startGroupAlsoOnComment();
+    const patternGrp = this.startNonPrettierGroupAlsoOnComment();
     this.visit(ctx.pattern());
     this.endGroup(patternGrp);
     const n = ctx.mergeAction_list().length;
