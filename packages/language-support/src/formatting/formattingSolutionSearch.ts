@@ -215,18 +215,8 @@ function getNeighbourState(curr: State, choice: Choice, split: Split): State {
     choice.left,
     nextIndentationState,
   );
-  let flag = false;
-  let splitType = split.splitType;
-  if (nextGroups.length - choice.left.groupsEnding > 0) {
-    const stateString = stateToString(curr)
-    const last = nextGroups.at(-(1 + choice.left.groupsEnding));
-    // TODO: the check for length being 0 will not be right always. this one probably needs
-    // to move somehow?
-    if (!last.nonPrettierStyle && last.align + last.size > MAX_COL && choice.left.groupsStarting.length === 0) {
-      splitType = '\n';
-      flag = true;
-    }
-  }
+  const flag = false;
+  const splitType = split.splitType;
   const isBreak = splitType === '\n' || splitType === '\n\n';
   // A state has indentation, which is applied after a hard line break. However, if it has an
   // active group and we decided to split within a line, the alignment of that group takes precedence
@@ -278,7 +268,7 @@ function getNeighbourState(curr: State, choice: Choice, split: Split): State {
         indentation: finalIndentation,
         left: choice.left,
         right: choice.right,
-        chosenSplit: flag ? {splitType: '\n', cost: 0}: split,
+        chosenSplit: flag ? { splitType: '\n', cost: 0 } : split,
       },
     },
   };
@@ -352,7 +342,21 @@ function bestFirstSolnSearch(
       return reconstructBestPath(state);
     }
     const choice = choiceList[state.choiceIndex];
-    let splits = choice.possibleSplitChoices
+    let splits = choice.possibleSplitChoices;
+    if (state.activeGroups.length - choice.left.groupsEnding > 0) {
+      const last = state.activeGroups.at(-(1 + choice.left.groupsEnding));
+      const containsSplit = splits.some(
+        (split) => split.splitType === '\n' || split.splitType === '\n\n',
+      );
+      if (
+        containsSplit &&
+        !last.nonPrettierStyle &&
+        last.align + last.size > MAX_COL &&
+        choice.left.groupsStarting.length === 0
+      ) {
+        splits = [{ splitType: '\n', cost: 0 }];
+      }
+    }
     for (const split of splits) {
       const neighbourState = getNeighbourState(state, choice, split);
       heap.push(neighbourState);
@@ -427,7 +431,10 @@ function chunkListToChoices(chunkList: Chunk[]): Choice[] {
     const chunk = chunkList[i];
     const index = i;
     groups = groups.concat(chunk.groupsStarting);
-    if (chunk.text === 'a' || (chunk.text == 'p.name' && chunk.groupsStarting.length === 2)) {
+    if (
+      chunk.text === 'a' ||
+      (chunk.text == 'p.name' && chunk.groupsStarting.length === 2)
+    ) {
       groups[0].length = 100;
     }
     for (let i = 0; i < chunk.groupsEnding; i++) {
