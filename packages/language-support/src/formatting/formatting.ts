@@ -330,7 +330,7 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
 
   startNonPrettierGroup = (): number => {
     return this.startGroup(true);
-  }
+  };
 
   startGroup = (notPrettierStyle?: true): number => {
     const newGroup = { id: this.groupID, length: 0, notPrettierStyle };
@@ -342,12 +342,16 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
 
   startNonPrettierGroupAlsoOnComment = (): number => {
     return this.startGroup(true);
-  }
+  };
 
   startGroupAlsoOnComment = (notPrettierStyle?: true): number => {
     if (this.lastInCurrentBuffer().type === 'COMMENT') {
       const idx = this.getFirstNonCommentIdx();
-      const newGroup: ChunkGroup = { id: this.groupID, length: 0, notPrettierStyle };
+      const newGroup: ChunkGroup = {
+        id: this.groupID,
+        length: 0,
+        notPrettierStyle,
+      };
       this.currentBuffer()
         .at(idx + 1)
         .groupsStarting.push(newGroup);
@@ -1175,7 +1179,7 @@ export class TreePrintVisitor extends CypherCmdParserVisitor<void> {
   visitParenthesizedPath = (ctx: ParenthesizedPathContext) => {
     this._visit(ctx.LPAREN());
     this.avoidBreakBetween();
-    const parenthesizedPathGrp = this.startGroup();
+    const parenthesizedPathGrp = this.startNonPrettierGroup();
     this._visit(ctx.pattern());
     if (ctx.WHERE()) {
       this._visit(ctx.WHERE());
